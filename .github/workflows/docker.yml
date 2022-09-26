@@ -1,0 +1,15 @@
+name: Docker
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*.*.*'
+
+jobs:
+  image:
+    uses: edencehealth/workflows/.github/workflows/dockerimage.yml@main
+    with:
+      container_name: ohdsi-glue
+    secrets: inherit
