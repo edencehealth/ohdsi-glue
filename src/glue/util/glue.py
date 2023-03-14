@@ -1,27 +1,23 @@
 #!/usr/bin/env python3
 """ primary functionality for gluing various ohdsi bits together """
-from typing import (
-    Any,
-    List,
-    NamedTuple,
-)
 import logging
 import re
+from typing import Any, List, NamedTuple
 
 import bcrypt
 
-from db.multidb import MultiDB
-from db.utils import ensure_schema, ensure_table
-from util.multiconfig import MultiConfig
-from util import webapi
+from ..db.multidb import MultiDB
+from ..db.utils import ensure_schema, ensure_table
+from . import webapi
+from .multiconfig import MultiConfig
 
-logger = logging.getLogger("ohdsi_glue.glue")
+logger = logging.getLogger(__name__)
 
 ADMIN_ROLE_ID = 2  # webapi sec_user_role role_id
 
 
 class SecRole(NamedTuple):
-    """ Contains information about a webapi security role """
+    """Contains information about a webapi security role"""
 
     login: str
     user_id: int
@@ -30,7 +26,7 @@ class SecRole(NamedTuple):
 
 
 class CDMSource(NamedTuple):
-    """ Contains information about a webapi cdm source """
+    """Contains information about a webapi cdm source"""
 
     source_id: int
     source_name: str
@@ -40,7 +36,7 @@ class CDMSource(NamedTuple):
 
 
 class CDMSourceDaimon(NamedTuple):
-    """ Contains information about a webapi cdm source_daimon """
+    """Contains information about a webapi cdm source_daimon"""
 
     source_daimon_id: int
     source_id: int
@@ -50,7 +46,10 @@ class CDMSourceDaimon(NamedTuple):
 
 
 def glue_it(config: MultiConfig) -> Any:
-    """ connect to the database, create the results schema, tell webapi how to connect to the cdm source """
+    """
+    connect to the database, create the results schema, tell webapi how to connect to
+    the cdm source
+    """
 
     # this will be converted to a webapi.WebAPIClient instance shortly
     api = None
@@ -125,7 +124,10 @@ def glue_it(config: MultiConfig) -> Any:
             canary_table = "cohort"
             if canary_table in cdm_db.list_tables(config.results_schema):
                 logger.info(
-                    "enable_result_init: found canary table (%s), init has already happened",
+                    (
+                        "enable_result_init: found canary table (%s), init has already "
+                        "happened"
+                    ),
                     canary_table,
                 )
             else:
@@ -147,7 +149,10 @@ def glue_it(config: MultiConfig) -> Any:
             config.db_database,
         ) as app_db:
             logger.info(
-                "enable_source_setup: create webapi source/source_daimon entries in app database..."
+                (
+                    "enable_source_setup: create webapi source/source_daimon entries "
+                    "in app database..."
+                )
             )
             ensure_webapi_source(config, app_db)
             ensure_webapi_source_daimons(config, app_db)
@@ -159,7 +164,8 @@ def glue_it(config: MultiConfig) -> Any:
 
 
 def get_sec_roles(config: MultiConfig, app_db: MultiDB) -> List[SecRole]:
-    """ return a list of user records from the webapi sec_* databases """
+    """return a list of user records from the webapi sec_* databases"""
+    # NOTE: this is not an f-string, these values are expanded by multidb
     query = """
     SELECT
         login,
@@ -168,8 +174,10 @@ def get_sec_roles(config: MultiConfig, app_db: MultiDB) -> List[SecRole]:
         sec_role.id AS role_id
     FROM
         {ID_schema}.sec_user
-        JOIN {ID_schema}.sec_user_role ON {ID_schema}.sec_user.id = {ID_schema}.sec_user_role.user_id
-        JOIN {ID_schema}.sec_role ON {ID_schema}.sec_user_role.role_id = {ID_schema}.sec_role.id;
+        JOIN {ID_schema}.sec_user_role
+            ON {ID_schema}.sec_user.id = {ID_schema}.sec_user_role.user_id
+        JOIN {ID_schema}.sec_role
+            ON {ID_schema}.sec_user_role.role_id = {ID_schema}.sec_role.id;
     """.strip()
     return [
         SecRole(*row) for row in app_db.get_rows(query, ID_schema=config.ohdsi_schema)
@@ -259,7 +267,10 @@ def ensure_admin_role(config: MultiConfig, app_db: MultiDB, username: str):
 
 
 def derived_source_key(config: MultiConfig) -> str:
-    """ return a safely-formatted version of config.source_name to be used as a cdm source_key"""
+    """
+    return a safely-formatted version of config.source_name to be used as a cdm
+    source_key
+    """
     return re.sub("[^A-Za-z0-9]", "_", config.source_name).strip("_")
 
 
@@ -269,20 +280,23 @@ def ensure_webapi_source(config: MultiConfig, app_db: MultiDB):
     """
 
     if config.cdm_db_dialect == "sql server":
-        jdbc_url_fmt = "jdbc:sqlserver://{db_host};databaseName={db_database};user={db_user};password={db_password}"
+        jdbc_url = (
+            f"jdbc:sqlserver://{config.cdm_db_server}"
+            f";databaseName={config.cdm_db_database}"
+            f";user={config.cdm_db_username}"
+            f";password={config.cdm_db_password}"
+        )
     elif config.cdm_db_dialect == "postgresql":
-        jdbc_url_fmt = "jdbc:postgresql://{db_host}/{db_database}?user={db_user}&password={db_password}"
+        jdbc_url = (
+            f"jdbc:postgresql://{config.cdm_db_server}"
+            f"/{config.cdm_db_database}"
+            f"?user={config.cdm_db_username}"
+            f"&password={config.cdm_db_password}"
+        )
     else:
         raise RuntimeError(
             "Unrecognized cdm database dialect: " + config.cdm_db_dialect
         )
-
-    jdbc_url = jdbc_url_fmt.format(
-        db_host=config.cdm_db_server,
-        db_database=config.cdm_db_database,
-        db_user=config.cdm_db_username,
-        db_password=config.cdm_db_password,
-    )
 
     # see if a source exists
     get_sources_query = """
@@ -327,7 +341,9 @@ def ensure_webapi_source(config: MultiConfig, app_db: MultiDB):
 
 
 def ensure_webapi_source_daimons(config: MultiConfig, app_db: MultiDB):
-    """ ensure that the appropriate source_daimon entries exist for a particular source """
+    """
+    ensure that the appropriate source_daimon entries exist for a particular source
+    """
     # find out our source_id
     source_id_query = """
     SELECT source_id
@@ -342,8 +358,9 @@ def ensure_webapi_source_daimons(config: MultiConfig, app_db: MultiDB):
     if len(source_ids) != 1:
         # no daimons; create them
         raise RuntimeError(
-            "Expected exactly 1 source to exist with the given source key. Got this list: {!r}".format(
-                source_ids
+            (
+                "Expected exactly 1 source to exist with the given source key. Got "
+                f"this list: {source_ids!r}"
             )
         )
     source_id = source_ids[0]
@@ -434,14 +451,15 @@ def ensure_webapi_source_daimons(config: MultiConfig, app_db: MultiDB):
 
         # len is not 1 or 0. this is weird.
         raise RuntimeError(
-            "Expected either no matching source_daimons or exactly 1. Got these: {!r}".format(
-                matching_daimons
+            (
+                "Expected either no matching source_daimons or exactly 1. Got these: "
+                f"{matching_daimons!r}"
             )
         )
 
 
 def update_source(config: MultiConfig, app_db: MultiDB, jdbc_url: str):
-    """ update a webapi CDM source enry """
+    """update a webapi CDM source enry"""
     source_update_query = """
     UPDATE {ID_schema}.source
     SET
@@ -461,7 +479,7 @@ def update_source(config: MultiConfig, app_db: MultiDB, jdbc_url: str):
 
 
 def create_source(config: MultiConfig, app_db: MultiDB, jdbc_url: str):
-    """ create a webapi CDM source enry """
+    """create a webapi CDM source enry"""
     create_source_query = """
     INSERT INTO {ID_schema}.source
         (source_id, source_name, source_key, source_connection, source_dialect)
@@ -491,7 +509,7 @@ def update_source_daimon(
     table_qualifier: str,
     priority: int,
 ):
-    """ create an existing webapi source_daimon entry """
+    """create an existing webapi source_daimon entry"""
     update_source_daimon_query = """
     UPDATE {ID_schema}.source_daimon
     SET
@@ -518,7 +536,7 @@ def create_source_daimon(
     table_qualifier: str,
     priority: int,
 ):
-    """ create a webapi source_daimon entry """
+    """create a webapi source_daimon entry"""
     # create the daimons for this new source
     create_source_daimon_query = """
     INSERT INTO {ID_schema}.source_daimon

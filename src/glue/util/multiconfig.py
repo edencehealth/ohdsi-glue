@@ -1,23 +1,14 @@
 #!/usr/bin/python3
 """ module for capturing the app configuration """
-from dataclasses import (
-    asdict,
-    dataclass,
-    field,
-    fields,
-)
-from typing import (
-    Any,
-    Dict,
-    Mapping,
-    Optional,
-)
 import argparse
 import json
 import os
 import typing
+from dataclasses import asdict, dataclass, field, fields
+from typing import Any, Dict, Mapping, Optional
 
-# these variables can be updated in the event that we want to switch to namespaced metadata
+# these variables can be updated in the event that we want to switch to namespaced
+# metadata
 doc: str = "doc"  # pylint: disable=C0103 # this makes the module a bit easier to read
 require: str = "require"
 options: str = "options"
@@ -42,13 +33,13 @@ APP_DESCRIPTION: str = "OHDSI Glue"
 
 
 def parse_bool(argument: str) -> bool:
-    """ parses the given argument string and returns a boolean evaluation """
+    """parses the given argument string and returns a boolean evaluation"""
     return argument.lower().strip() in ("1", "enable", "on", "true", "y", "yes")
 
 
 @dataclass
 class MultiConfig:
-    """ dataclass which captures the runtime configuration of the app """
+    """dataclass which captures the runtime configuration of the app"""
 
     # pylint: disable=R0902 # this is a config class
 
@@ -78,7 +69,10 @@ class MultiConfig:
     batch_size: Optional[int] = field(
         default=None,
         metadata={
-            doc: "batch size to use during bulk insert, see https://zillow.github.io/ctds/bulk_insert.html#batch-size"
+            doc: (
+                "batch size to use during bulk insert, see "
+                "https://zillow.github.io/ctds/bulk_insert.html#batch-size"
+            )
         },
     )
     atlas_username: str = field(
@@ -180,7 +174,10 @@ class MultiConfig:
     webapi_tls: bool = field(
         default=True,
         metadata={
-            doc: "boolean that determines if http or https should be used to communicate with webapi",
+            doc: (
+                "boolean that determines if http or https should be used to "
+                "communicate with webapi"
+            ),
             parser: parse_bool,
         },
     )
@@ -193,14 +190,20 @@ class MultiConfig:
     init_concept_hierarchy: bool = field(
         default=True,
         metadata={
-            doc: "whether to establish the concept_hierarchy (a cached version of the OMOP vocabulary specific to the concepts found in your CDM)",
+            doc: (
+                "whether to establish the concept_hierarchy (a cached version of the "
+                "OMOP vocabulary specific to the concepts found in your CDM)"
+            ),
             parser: parse_bool,
         },
     )
     ohdsi_schema: str = field(
         default="ohdsi",
         metadata={
-            doc: "the schema used by webapi to manage its own configuration and other state",
+            doc: (
+                "the schema used by webapi to manage its own configuration and other "
+                "state"
+            ),
         },
     )
     security_schema: str = field(
@@ -236,33 +239,49 @@ class MultiConfig:
     source_name: str = field(
         default="My Cdm",
         metadata={
-            doc: "the name of the data source, used by webapi to refer to the data source",
+            doc: (
+                "the name of the data source, used by webapi to refer to the data "
+                "source"
+            ),
         },
     )
     source_key: Optional[str] = field(
         default=None,
         metadata={
-            doc: "a key identifying the data source, used by webapi, if not given it will be derived from source_name"
+            doc: (
+                "a key identifying the data source, used by webapi, if not given it "
+                "will be derived from source_name"
+            )
         },
     )
     enable_result_init: bool = field(
         default=True,
         metadata={
-            doc: "enable setting up the results tables (see: https://github.com/OHDSI/WebAPI/wiki/CDM-Configuration#results-schema-setup)",
+            doc: (
+                "enable setting up the results tables (see: https://github.com"
+                "/OHDSI/WebAPI/wiki/CDM-Configuration#results-schema-setup)"
+            ),
             parser: parse_bool,
         },
     )
     enable_source_setup: bool = field(
         default=True,
         metadata={
-            doc: "enable setting up the WebAPI source & source_daimon tables (see: https://github.com/OHDSI/WebAPI/wiki/CDM-Configuration#source-and-source_daimon-table-setup)",
+            doc: (
+                "enable setting up the WebAPI source & source_daimon tables (see: "
+                "https://github.com/OHDSI/WebAPI/wiki/CDM-Configuration"
+                "#source-and-source_daimon-table-setup)"
+            ),
             parser: parse_bool,
         },
     )
     enable_basic_security: bool = field(
         default=True,
         metadata={
-            doc: "enable setting up the basic security schema & table (see: https://github.com/OHDSI/WebAPI/wiki/Basic-Security-Configuration)",
+            doc: (
+                "enable setting up the basic security schema & table (see: "
+                "https://github.com/OHDSI/WebAPI/wiki/Basic-Security-Configuration)"
+            ),
             parser: parse_bool,
         },
     )
@@ -273,7 +292,7 @@ class MultiConfig:
     #
 
     def __post_init__(self):
-        """ load the app configuration from the various sources """
+        """load the app configuration from the various sources"""
         json_path = os.environ.get("JSON_CONFIG_PATH", "config.json")
         self.update_from_json(json_path)
         self.update_from_environ()
@@ -293,20 +312,20 @@ class MultiConfig:
             if item_name not in config_fields:
                 continue
             config_field = config_fields[item_name]
-            # if the field has a parser defined, use that; otherwise use its type as a parser
+            # if the field has a parser defined, use it; otherwise use its constructor
             field_parser = config_field.metadata.get(parser, None)
             if field_parser is None:
                 field_parser = not_optional(config_field.type)
             setattr(self, item_name, field_parser(item_value))
 
     def update_from_environ(self) -> None:
-        """ update the settings from values in the environment """
+        """update the settings from values in the environment"""
         self.update({name.lower(): value for name, value in os.environ.items()})
 
     def update_from_json(
         self, json_path: str, required=False, encoding="utf-8"
     ) -> None:
-        """ update the settings from values in a json file """
+        """update the settings from values in a json file"""
         if not os.path.isfile(json_path):
             if required:
                 raise RuntimeError(
@@ -321,8 +340,8 @@ class MultiConfig:
             self.update(json_data)
 
     def update_from_args(self) -> None:
-        """ generates an argument parser and runs it updating the values as needed """
-        argp = argparse.ArgumentParser(description=APP_DESCRIPTION)
+        """generates an argument parser and runs it updating the values as needed"""
+        argp = argparse.ArgumentParser(description=APP_DESCRIPTION, prog=__package__)
         for config_field in fields(self):
             still_has_default_value = (
                 getattr(self, config_field.name) == config_field.default
@@ -344,7 +363,7 @@ class MultiConfig:
         self.update({k: v for k, v in vars(argp.parse_args()).items() if v is not None})
 
     def validate(self) -> None:
-        """ validate the given configuration options """
+        """validate the given configuration options"""
         # validate the data (for now just verify against the "options" setting)
         # i.e. does the value loaded match one of the options defined for this
         # configuration option? e.g. self.color in ['red', 'green', 'blue']
@@ -371,7 +390,7 @@ class MultiConfig:
             )
 
     def asdict(self) -> Dict[str, Any]:
-        """ return a representation of the config as a dictionary """
+        """return a representation of the config as a dictionary"""
         return asdict(self)
 
 

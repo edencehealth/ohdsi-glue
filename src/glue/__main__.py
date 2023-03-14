@@ -2,10 +2,16 @@
 """ ohdsi_glue entrypoint """
 # stdlib imports
 import json
+import os
 import traceback
+from typing import Final
 
 # local imports
-from util import loggingsetup, multiconfig, glue
+from .util import glue, loggingsetup, multiconfig
+
+PROG_TAG: Final = os.environ.get("GIT_TAG", "dev")
+PROG_COMMIT: Final = os.environ.get("GIT_COMMIT", "N/A")
+PROG: Final = f"{__package__} {PROG_TAG} (commit {PROG_COMMIT})"
 
 
 def main() -> None:
@@ -22,7 +28,8 @@ def main() -> None:
 
     # write the current configuration to the logs (but redact the passwords)
     logger.info(
-        "Starting with config: %s",
+        "Starting %s with config: %s",
+        PROG,
         json.dumps(
             {
                 k: (v if "password" not in k else "--PASSWORD REDACTED--")
@@ -38,8 +45,9 @@ def main() -> None:
         print("\n")
         logger.warning("KeyboardInterrupt detected, exiting.")
     except Exception as uncaught_exception:  # noqa: E722
-        logger.critical("Uncaught exception: %s", traceback.format_exc())
-        raise uncaught_exception from None  # log exceptions then permit them to continue
+        logger.fatal("UNCAUGHT EXCEPTION: %s", uncaught_exception.__str__().strip())
+        logger.fatal("TRACEBACK: %s", traceback.format_exc())
+        exit(1)
 
 
 if __name__ == "__main__":

@@ -7,12 +7,12 @@ from .multiconfig import MultiConfig
 
 
 def from_config(config: MultiConfig) -> logging.Logger:
-    """ sets up logging for the app and returns the root logger """
+    """sets up logging for the app and returns the root logger"""
     log_format = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
-    logger = logging.getLogger("ohdsi_glue")
+    logger = logging.getLogger(__name__)
     logger.setLevel(config.log_level)
 
     # always log to the console in a container context
