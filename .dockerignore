@@ -6,3 +6,6 @@
 **/.vscode
 **/venv
 .git
+.github
+.gitignore
+.yamllint.yaml

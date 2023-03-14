@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """ microsoft sql server related functions """
-from typing import Any
 import logging
+from typing import Any
 
 import ctds
 
-logger = logging.getLogger("ohdsi_glue.db.mssql")
+logger = logging.getLogger(__name__)
 
 
 def connect(*args, **kwargs) -> Any:

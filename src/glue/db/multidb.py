@@ -4,13 +4,7 @@ import contextlib
 import logging
 import re
 import string
-from typing import (
-    Any,
-    Dict,
-    List,
-    NamedTuple,
-    Tuple,
-)
+from typing import Any, Dict, List, NamedTuple, Tuple
 
 from .mssql import connect as mssql_connect
 from .postgres import connect as pg_connect
@@ -19,7 +13,7 @@ from .postgres import connect as pg_connect
 identifier_prefix = "ID_"
 literal_prefix = "LIT_"
 
-logger = logging.getLogger("multidb")
+logger = logging.getLogger(__name__)
 
 
 def interpolation_safe(value: str) -> bool:
@@ -42,18 +36,21 @@ class KeyFormatter(dict):
     # this class is used by the adjust_paramstyle function
 
     def __init__(self, key_format: str, *args, **kwargs):
-        """ creates a new instance with the given key_format (a str.format-style string format template) """
+        """
+        creates a new instance with the given key_format (a str.format-style
+        string format template)
+        """
         # https://docs.python.org/3/library/string.html#format-string-syntax
         self.key_format = key_format
         super().__init__(*args, **kwargs)
 
     def __missing__(self, key) -> str:
-        """ returns the key itself, formatted by key_format """
+        """returns the key itself, formatted by key_format"""
         return self.key_format.format(key)
 
 
 class ColumnInfo(NamedTuple):
-    """ Contains information about the structure of a column in a database """
+    """Contains information about the structure of a column in a database"""
 
     position: int
     nullable: bool
@@ -64,7 +61,7 @@ class ColumnInfo(NamedTuple):
 
 
 class MultiDB(contextlib.AbstractContextManager):
-    """ generic database wrapper """
+    """generic database wrapper"""
 
     def __init__(
         self,
@@ -89,7 +86,7 @@ class MultiDB(contextlib.AbstractContextManager):
         self.database = database
 
     def __exit__(self, *args, **kwargs):
-        """ close the database connection """
+        """close the database connection"""
         return self.cnxn.__exit__(*args, **kwargs)
 
     def query(self, query: str, **params: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
@@ -121,9 +118,8 @@ class MultiDB(contextlib.AbstractContextManager):
                 param_value = str(params[param])
                 if not interpolation_safe(param_value):
                     raise RuntimeError(
-                        "unsafe value encountered in interpolated param {name}: '{value}'".format(
-                            name=param, value=param_value
-                        )
+                        f"unsafe value encountered in interpolated param "
+                        f"{param}: '{param_value}'"
                     )
                 safe_values[param] = param_value
                 del params[param]
@@ -141,8 +137,8 @@ class MultiDB(contextlib.AbstractContextManager):
         """
         executes the given sql query, fetches, and returns the results
         if the results contain exactly one column, that column will be returned directly
-        e.g. "SELECT name FROM ships" -> ["Rocinante", "Enterprise", "Endurance 1", "Orion III"]
-        ...rather than [["Rocinante"], ["Enterprise"], ["Endurance 1"], ["Orion III"]]
+        e.g. "SELECT name FROM ships" -> ["Rocinante", "Enterprise", "Orion III"]
+        ...rather than [["Rocinante"], ["Enterprise"], ["Orion III"]]
         """
         with self.cnxn.cursor() as cursor:
             final_query, filtered_params = self.query(sql, **params)
@@ -159,9 +155,8 @@ class MultiDB(contextlib.AbstractContextManager):
         if columns != 1:
             # fixme: does this make sense? should I return everything?
             raise RuntimeError(
-                "get_column returned a result set with {} columns instead of the expected 1 column".format(
-                    columns
-                )
+                f"get_column returned a result set with {columns} columns instead of "
+                "the expected 1 column"
             )
 
         return [row[0] for row in rows]
@@ -186,7 +181,7 @@ class MultiDB(contextlib.AbstractContextManager):
         return rows
 
     def execute(self, sql: str, **params) -> None:
-        """ executes the given sql query on the given connection """
+        """executes the given sql query on the given connection"""
         with self.cnxn.cursor() as cursor:
             final_query, filtered_params = self.query(sql, **params)
             logger.debug(
@@ -244,7 +239,7 @@ class MultiDB(contextlib.AbstractContextManager):
         }
 
     def list_schemas(self) -> List[str]:
-        """ return a list of schemas in the database """
+        """return a list of schemas in the database"""
         sql = """
         SELECT
             schema_name
@@ -254,7 +249,7 @@ class MultiDB(contextlib.AbstractContextManager):
         return self.get_column(sql)
 
     def list_tables(self, schema: str) -> List[str]:
-        """ return a list of tables in the given schema """
+        """return a list of tables in the given schema"""
         sql = """
         SELECT
             table_name

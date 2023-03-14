@@ -1,6 +1,6 @@
 name: Docker
 
-on:
+"on":
   push:
     branches:
       - main
@@ -9,7 +9,7 @@ on:
 
 jobs:
   image:
-    uses: edencehealth/workflows/.github/workflows/dockerimage.yml@main
+    uses: edencehealth/workflows/.github/workflows/dockerimage.yml@v1
     with:
       container_name: ohdsi-glue
     secrets: inherit
