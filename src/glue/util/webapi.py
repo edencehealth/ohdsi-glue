@@ -1,6 +1,7 @@
 #!/usr/bin/env/python3
 """ interactions with OHDSI WebAPI, over its web API """
 import logging
+from typing import Dict, Union
 
 import requests
 
@@ -103,3 +104,7 @@ class WebAPIClient:
         result = self.get("/ddl/results", params=params)
         result.raise_for_status()
         return result.text
+
+    def get_info(self) -> Dict[str, Union[str, int, float]]:
+        """ask for webapi instance information"""
+        return self.get("info").json()

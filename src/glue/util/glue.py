@@ -8,7 +8,7 @@ import bcrypt
 
 from ..db.multidb import MultiDB
 from ..db.utils import ensure_schema, ensure_table
-from . import webapi
+from . import semver, webapi
 from .multiconfig import MultiConfig
 
 logger = logging.getLogger(__name__)
@@ -105,6 +105,9 @@ def glue_it(config: MultiConfig) -> Any:
     if api is None:
         api = webapi.WebAPIClient(config)
 
+    api_info = api.get_info()
+    webapi_version = semver.SemVer(str(api_info["version"]))
+
     if config.enable_result_init:
         logger.info("enable_result_init: connecting to CDM database")
         with MultiDB(
@@ -154,7 +157,7 @@ def glue_it(config: MultiConfig) -> Any:
                     "in app database..."
                 )
             )
-            ensure_webapi_source(config, app_db)
+            ensure_webapi_source(config, app_db, webapi_version)
             ensure_webapi_source_daimons(config, app_db)
             logger.info("enable_source_setup: refreshing webapi sources")
             api.source_refresh()
@@ -274,7 +277,9 @@ def derived_source_key(config: MultiConfig) -> str:
     return re.sub("[^A-Za-z0-9]", "_", config.source_name).strip("_")
 
 
-def ensure_webapi_source(config: MultiConfig, app_db: MultiDB):
+def ensure_webapi_source(
+    config: MultiConfig, app_db: MultiDB, webapi_version: semver.SemVer
+):
     """
     ensure that the webapi source table has an entry for the current cdm config
     """
@@ -314,7 +319,7 @@ def ensure_webapi_source(config: MultiConfig, app_db: MultiDB):
     ]
     if len(existing_sources) == 0:
         # no source exists, create one
-        create_source(config, app_db, jdbc_url)
+        create_source(config, app_db, jdbc_url, webapi_version)
         return
 
     if len(existing_sources) == 1:
@@ -329,7 +334,7 @@ def ensure_webapi_source(config: MultiConfig, app_db: MultiDB):
             return
 
         # the source does not look right; update it
-        update_source(config, app_db, jdbc_url)
+        update_source(config, app_db, jdbc_url, webapi_version)
         return
 
     # there is more than 1 existing source with that source_key... that's weird
@@ -458,16 +463,32 @@ def ensure_webapi_source_daimons(config: MultiConfig, app_db: MultiDB):
         )
 
 
-def update_source(config: MultiConfig, app_db: MultiDB, jdbc_url: str):
-    """update a webapi CDM source enry"""
-    source_update_query = """
-    UPDATE {ID_schema}.source
-    SET
-        source_name = {source_name},
-        source_connection = {source_connection},
-        source_dialect = {source_dialect}
-    WHERE source_key = {source_key};
-    """.strip()
+def update_source(
+    config: MultiConfig, app_db: MultiDB, jdbc_url: str, webapi_version: semver.SemVer
+):
+    """update a webapi CDM source entry"""
+    if webapi_version >= "2.12.0":
+        logger.debug("update_source selected >=2.12.0 query")
+        # this version includes "is_cache_enabled"
+        source_update_query = """
+        UPDATE {ID_schema}.source
+        SET
+            source_name = {source_name},
+            source_connection = {source_connection},
+            source_dialect = {source_dialect},
+            is_cache_enabled = {is_cache_enabled}
+        WHERE source_key = {source_key};
+        """.strip()
+    else:
+        logger.debug("update_source selected <2.12.0 query")
+        source_update_query = """
+        UPDATE {ID_schema}.source
+        SET
+            source_name = {source_name},
+            source_connection = {source_connection},
+            source_dialect = {source_dialect}
+        WHERE source_key = {source_key};
+        """.strip()
     app_db.execute(
         source_update_query,
         ID_schema=config.ohdsi_schema,
@@ -475,21 +496,41 @@ def update_source(config: MultiConfig, app_db: MultiDB, jdbc_url: str):
         source_name=config.source_name,
         source_connection=jdbc_url,
         source_dialect=config.cdm_db_dialect,
+        is_cache_enabled=config.source_cache,
     )
 
 
-def create_source(config: MultiConfig, app_db: MultiDB, jdbc_url: str):
-    """create a webapi CDM source enry"""
-    create_source_query = """
-    INSERT INTO {ID_schema}.source
-        (source_id, source_name, source_key, source_connection, source_dialect)
-    VALUES
-        (nextval('{ID_schema}.source_sequence'),
-        {source_name},
-        {source_key},
-        {source_connection},
-        {source_dialect});
-    """.strip()
+def create_source(
+    config: MultiConfig, app_db: MultiDB, jdbc_url: str, webapi_version: semver.SemVer
+):
+    """create a webapi CDM source entry"""
+    if webapi_version >= "2.12.0":
+        logger.debug("create_source selected >=2.12.0 query")
+        # this version includes "is_cache_enabled"
+        create_source_query = """
+        INSERT INTO {ID_schema}.source
+            (source_id, source_name, source_key, source_connection, source_dialect,
+             is_cache_enabled)
+        VALUES
+            (nextval('{ID_schema}.source_sequence'),
+            {source_name},
+            {source_key},
+            {source_connection},
+            {source_dialect},
+            {is_cache_enabled});
+        """.strip()
+    else:
+        logger.debug("create_source selected <2.12.0 query")
+        create_source_query = """
+        INSERT INTO {ID_schema}.source
+            (source_id, source_name, source_key, source_connection, source_dialect)
+        VALUES
+            (nextval('{ID_schema}.source_sequence'),
+            {source_name},
+            {source_key},
+            {source_connection},
+            {source_dialect});
+        """.strip()
     logger.debug("sending webapi create source query: %s", create_source_query)
     app_db.execute(
         create_source_query,
@@ -498,6 +539,7 @@ def create_source(config: MultiConfig, app_db: MultiDB, jdbc_url: str):
         source_key=config.source_key,
         source_connection=jdbc_url,
         source_dialect=config.cdm_db_dialect,
+        is_cache_enabled="TRUE" if config.source_cache else "FALSE",
     )
 
 

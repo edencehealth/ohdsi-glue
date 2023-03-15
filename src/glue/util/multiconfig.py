@@ -245,6 +245,12 @@ class MultiConfig:
             ),
         },
     )
+    source_cache: bool = field(
+        default=True,
+        metadata={
+            doc: "determines is_cache_enabled when adding a CDM source to WebAPI",
+        },
+    )
     source_key: Optional[str] = field(
         default=None,
         metadata={
