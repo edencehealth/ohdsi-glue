@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """ implementation of class for working with postgres and mssql databases """
+# pylint: disable=R0913
 import contextlib
 import logging
 import re
@@ -153,7 +154,6 @@ class MultiDB(contextlib.AbstractContextManager):
             rows = cursor.fetchall()
 
         if columns != 1:
-            # fixme: does this make sense? should I return everything?
             raise RuntimeError(
                 f"get_column returned a result set with {columns} columns instead of "
                 "the expected 1 column"
@@ -221,9 +221,7 @@ class MultiDB(contextlib.AbstractContextManager):
         info = self.get_rows(sql, ID_table_name=table_name)
         if not info:
             raise RuntimeError(
-                "table_info couldn't query INFORMATION_SCHEMA about table {}".format(
-                    table_name
-                )
+                f"table_info couldn't query INFORMATION_SCHEMA about table {table_name}"
             )
 
         return {

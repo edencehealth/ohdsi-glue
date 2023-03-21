@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+dependencies = {file = ["requirements.txt"]}
+
+[tool.vulture]
+# exclude = ["*file*.py", "dir/"]
+# ignore_decorators = ["@app.route", "@require_*"]
+# ignore_names = ["visit_*", "do_*"]
+make_whitelist = true
+min_confidence = 80
+paths = ["src"]
+sort_by_size = true
+verbose = true

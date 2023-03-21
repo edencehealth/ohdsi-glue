@@ -82,9 +82,9 @@ class SemVer:
                     self.patch == other.patch,
                 )
             )
-        elif isinstance(other, str):
+        if isinstance(other, str):
             return self == self.__class__(other)
-        elif isinstance(other, float):
+        if isinstance(other, float):
             # major/minor comparison
             int_part, frac_part = split_float(other)
             return all(
@@ -93,7 +93,7 @@ class SemVer:
                     self.minor == frac_part,
                 )
             )
-        elif isinstance(other, int):
+        if isinstance(other, int):
             # major comparison
             return self.major == other
         raise NotImplementedError(
@@ -110,24 +110,18 @@ class SemVer:
                 b = getattr(other, attr)
                 if a == b:
                     continue
-                if a < b:
-                    return True
-                return False
-        elif isinstance(other, str):
+                return a < b
+        if isinstance(other, str):
             return self < self.__class__(other)
-        elif isinstance(other, float):
+        if isinstance(other, float):
             # major/minor comparison
             int_part, frac_part = split_float(other)
             if self.major != int_part:
-                if self.major < int_part:
-                    return True
-                return False
+                return self.major < int_part
             if self.minor != frac_part:
-                if self.minor < frac_part:
-                    return True
-                return False
+                return self.minor < frac_part
             return False
-        elif isinstance(other, int):
+        if isinstance(other, int):
             # major comparison
             return self.major < other
         raise NotImplementedError(

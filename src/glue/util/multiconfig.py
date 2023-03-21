@@ -335,9 +335,7 @@ class MultiConfig:
         if not os.path.isfile(json_path):
             if required:
                 raise RuntimeError(
-                    "required json config file {path} was not found".format(
-                        path=json_path
-                    )
+                    f"required json config file {json_path} was not found"
                 )
             # no file, no exception to raise = nothing left to do
             return
@@ -384,14 +382,11 @@ class MultiConfig:
             if field_options is None or field_value in field_options:
                 # everything is fine
                 continue
+            field_option_list = ", ".join([str(x) for x in field_options])
             raise RuntimeError(
                 (
-                    "Invalid value ({}) for configuration option: {}. It must "
-                    "be one of: {}"
-                ).format(
-                    field_value,
-                    config_field.name,
-                    ", ".join([str(x) for x in field_options]),
+                    f"Invalid value ({field_value}) for configuration option: "
+                    f"{config_field.name}. It must be one of: {field_option_list}"
                 )
             )
 

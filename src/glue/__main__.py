@@ -3,6 +3,7 @@
 # stdlib imports
 import json
 import os
+import sys
 import traceback
 from typing import Final
 
@@ -44,10 +45,11 @@ def main() -> None:
     except KeyboardInterrupt:
         print("\n")
         logger.warning("KeyboardInterrupt detected, exiting.")
-    except Exception as uncaught_exception:  # noqa: E722
-        logger.fatal("UNCAUGHT EXCEPTION: %s", uncaught_exception.__str__().strip())
+
+    except Exception as uncaught_exception:  # pylint: disable=W0718
+        logger.fatal("UNCAUGHT EXCEPTION: %s", str(uncaught_exception).strip())
         logger.fatal("TRACEBACK: %s", traceback.format_exc())
-        exit(1)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

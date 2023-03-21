@@ -1,5 +1,6 @@
 #!/usr/bin/env/python3
 """ interactions with OHDSI WebAPI, over its web API """
+# pylint: disable=R0903
 import logging
 from typing import Dict, Union
 
@@ -57,12 +58,11 @@ class WebAPIClient:
 
     def path_url(self, path: str) -> str:
         """return the full url for the given webapi path"""
-        return "{scheme}://{webapi_addr}/{webapi_base_path}/{path}".format(
-            scheme="https" if self.config.webapi_tls else "http",
-            webapi_base_path=self.config.webapi_base_path.strip("/"),
-            path=path.lstrip("/"),
-            webapi_addr=self.config.webapi_addr,
-        )
+        scheme = "https" if self.config.webapi_tls else "http"
+        webapi_base_path = self.config.webapi_base_path.strip("/")
+        stripped_path = path.lstrip("/")
+        webapi_addr = self.config.webapi_addr
+        return f"{scheme}://{webapi_addr}/{webapi_base_path}/{stripped_path}"
 
     def post(self, path: str, *args, **kwargs):
         """make POST request to webapi"""
@@ -70,7 +70,7 @@ class WebAPIClient:
         logger.debug("webapi_post to %s", url)
         if self.auth:
             kwargs["auth"] = self.auth
-        return requests.post(url, *args, **kwargs)
+        return requests.post(url, *args, timeout=60.0, **kwargs)
 
     def get(self, path: str, *args, **kwargs):
         """make a GET request to webapi"""
@@ -78,7 +78,7 @@ class WebAPIClient:
         logger.debug("webapi_get %s", url)
         if self.auth:
             kwargs["auth"] = self.auth
-        return requests.get(url, *args, **kwargs)
+        return requests.get(url, *args, timeout=60.0, **kwargs)
 
     def source_refresh(self):
         """
