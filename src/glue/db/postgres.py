@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """ postgres-related functions """
-from typing import Any, Optional
 import re
+from typing import Any, Optional
 
 import psycopg2
 
 
 def connect(server: str, user: str, password: str, database: str) -> Any:
-    """ adapt psycopg2.connect to the 'host:port'-style server param """
+    """adapt psycopg2.connect to the 'host:port'-style server param"""
     port: Optional[int]
     if ":" in server:
         # potential port specification

@@ -8,4 +8,5 @@
 .git
 .github
 .gitignore
+.pre-commit-config.yaml
 .yamllint.yaml

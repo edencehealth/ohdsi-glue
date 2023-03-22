@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """ primary functionality for gluing various ohdsi bits together """
+# pylint: disable=R0913
 import logging
 import re
 from typing import Any, List, NamedTuple
@@ -339,9 +340,8 @@ def ensure_webapi_source(
 
     # there is more than 1 existing source with that source_key... that's weird
     raise RuntimeError(
-        "Expected either no matching sources or exactly 1. Got these: {!r}".format(
-            existing_sources
-        )
+        f"Expected either no matching sources or exactly 1. Got these: "
+        f"{existing_sources!r}"
     )
 
 
