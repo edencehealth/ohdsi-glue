@@ -25,9 +25,11 @@ jobs:
       - name: install OS-level deps
         run: |-
           #!/bin/sh
+          SELF=$(basename "$0" ".sh")
+          printf '%s\n' "${SELF} running as $(id) in $(pwd)" >&2;
           set -eux
           export DEBIAN_FRONTEND=noninteractive;
-          AG="apt-get -yq --no-install-recommends";
+          AG="sudo apt-get -yq --no-install-recommends";
           $AG update; \
           $AG install \
             freetds-dev \
@@ -37,6 +39,8 @@ jobs:
       - name: install python packages
         run: |-
           #!/bin/sh
+          SELF=$(basename "$0" ".sh")
+          printf '%s\n' "${SELF} running as $(id) in $(pwd)" >&2;
           set -eux
           pip install \
             --upgrade \
