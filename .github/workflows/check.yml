@@ -22,14 +22,26 @@ jobs:
           cache: 'pip' # caching pip dependencies
           python-version: '3.11'
 
-      - name: install requirements-dev.txt
+      - name: install OS-level deps
+        run: |-
+          #!/bin/sh
+          set -eux
+          export DEBIAN_FRONTEND=noninteractive;
+          AG="apt-get -yq --no-install-recommends";
+          $AG update; \
+          $AG install \
+            freetds-dev \
+            unixodbc-dev \
+          ;
+
+      - name: install python packages
         run: |-
           #!/bin/sh
           set -eux
           pip install \
             --upgrade \
             -r requirements.txt \
-            -r requirements-dev.txt
+            -r requirements-dev.txt;
 
       # https://github.com/pre-commit/action
       - name: run pre-commit
