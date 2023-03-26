@@ -9,6 +9,7 @@ import bcrypt
 
 from ..db.multidb import MultiDB
 from ..db.utils import ensure_schema, ensure_table
+from ..sql import queries
 from . import semver, webapi
 from .multiconfig import MultiConfig
 
@@ -78,7 +79,7 @@ def glue_it(config: MultiConfig) -> Any:
                 security_db,
                 config.security_schema,
                 "users",
-                "sql/basic_security_users.sql",
+                queries["basic_security_users"],
             )
 
             # ensure the atlas user exists in the users table
