@@ -11,7 +11,7 @@ from ..db.multidb import MultiDB
 from ..db.utils import ensure_schema, ensure_table
 from ..sql import queries
 from . import semver, webapi
-from .multiconfig import MultiConfig
+from .glueconfig import GlueConfig
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class CDMSourceDaimon(NamedTuple):
     priority: int
 
 
-def glue_it(config: MultiConfig) -> Any:
+def glue_it(config: GlueConfig) -> Any:
     """
     connect to the database, create the results schema, tell webapi how to connect to
     the cdm source
@@ -168,7 +168,7 @@ def glue_it(config: MultiConfig) -> Any:
     logger.info("done")
 
 
-def get_sec_roles(config: MultiConfig, app_db: MultiDB) -> List[SecRole]:
+def get_sec_roles(config: GlueConfig, app_db: MultiDB) -> List[SecRole]:
     """return a list of user records from the webapi sec_* databases"""
     # NOTE: this is not an f-string, these values are expanded by multidb
     query = """
@@ -190,7 +190,7 @@ def get_sec_roles(config: MultiConfig, app_db: MultiDB) -> List[SecRole]:
 
 
 def ensure_basic_security_user(
-    config: MultiConfig, sec_db: MultiDB, username: str, password: str
+    config: GlueConfig, sec_db: MultiDB, username: str, password: str
 ):
     """
     ensure that the basic security tables have a user entry for the given user
@@ -233,7 +233,7 @@ def ensure_basic_security_user(
     logger.debug("done")
 
 
-def ensure_admin_role(config: MultiConfig, app_db: MultiDB, username: str):
+def ensure_admin_role(config: GlueConfig, app_db: MultiDB, username: str):
     """
     ensure that the atlas admin user is an admin
     """
@@ -271,7 +271,7 @@ def ensure_admin_role(config: MultiConfig, app_db: MultiDB, username: str):
     logger.debug("done")
 
 
-def derived_source_key(config: MultiConfig) -> str:
+def derived_source_key(config: GlueConfig) -> str:
     """
     return a safely-formatted version of config.source_name to be used as a cdm
     source_key
@@ -280,7 +280,7 @@ def derived_source_key(config: MultiConfig) -> str:
 
 
 def ensure_webapi_source(
-    config: MultiConfig, app_db: MultiDB, webapi_version: semver.SemVer
+    config: GlueConfig, app_db: MultiDB, webapi_version: semver.SemVer
 ):
     """
     ensure that the webapi source table has an entry for the current cdm config
@@ -346,7 +346,7 @@ def ensure_webapi_source(
     )
 
 
-def ensure_webapi_source_daimons(config: MultiConfig, app_db: MultiDB):
+def ensure_webapi_source_daimons(config: GlueConfig, app_db: MultiDB):
     """
     ensure that the appropriate source_daimon entries exist for a particular source
     """
@@ -465,7 +465,7 @@ def ensure_webapi_source_daimons(config: MultiConfig, app_db: MultiDB):
 
 
 def update_source(
-    config: MultiConfig, app_db: MultiDB, jdbc_url: str, webapi_version: semver.SemVer
+    config: GlueConfig, app_db: MultiDB, jdbc_url: str, webapi_version: semver.SemVer
 ):
     """update a webapi CDM source entry"""
     if webapi_version >= "2.12.0":
@@ -502,7 +502,7 @@ def update_source(
 
 
 def create_source(
-    config: MultiConfig, app_db: MultiDB, jdbc_url: str, webapi_version: semver.SemVer
+    config: GlueConfig, app_db: MultiDB, jdbc_url: str, webapi_version: semver.SemVer
 ):
     """create a webapi CDM source entry"""
     if webapi_version >= "2.12.0":
@@ -545,7 +545,7 @@ def create_source(
 
 
 def update_source_daimon(
-    config: MultiConfig,
+    config: GlueConfig,
     app_db: MultiDB,
     source_daimon_id: int,
     daimon_type: int,
@@ -572,7 +572,7 @@ def update_source_daimon(
 
 
 def create_source_daimon(
-    config: MultiConfig,
+    config: GlueConfig,
     app_db: MultiDB,
     source_id: int,
     daimon_type: int,

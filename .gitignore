@@ -4,5 +4,5 @@
 .mypy_cache
 .venv
 .vscode
-venv
 __pycache__
+venv

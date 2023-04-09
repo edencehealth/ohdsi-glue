@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """ ohdsi_glue entrypoint """
 # stdlib imports
-import json
 import os
 import sys
 import traceback
 from typing import Final
 
 # local imports
-from .util import glue, loggingsetup, multiconfig
+from .util import glue, glueconfig, loggingsetup
 
 PROG_TAG: Final = os.environ.get("GIT_TAG", "dev")
 PROG_COMMIT: Final = os.environ.get("GIT_COMMIT", "N/A")
@@ -20,25 +19,15 @@ def main() -> None:
     load configuration, setup logging, setup the database, start the load
     """
     # load config and process command-line args
-    config = multiconfig.MultiConfig()
+    config = glueconfig.GlueConfig(
+        prog=PROG,
+        prog_description="Utility for working with OHDSI apps",
+    )
     if config.source_key is None:
         config.source_key = glue.derived_source_key(config)
 
     # setup logging
-    logger = loggingsetup.from_config(config)
-
-    # write the current configuration to the logs (but redact the passwords)
-    logger.info(
-        "Starting %s with config: %s",
-        PROG,
-        json.dumps(
-            {
-                k: (v if "password" not in k else "--PASSWORD REDACTED--")
-                for k, v in config.asdict().items()
-            },
-            indent=2,
-        ),
-    )
+    logger = loggingsetup.from_config(config, PROG)
 
     try:
         glue.glue_it(config)

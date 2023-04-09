@@ -4,10 +4,10 @@ import json
 import logging
 import os
 
-from .multiconfig import MultiConfig
+from .glueconfig import GlueConfig
 
 
-def from_config(config: MultiConfig) -> logging.Logger:
+def from_config(config: GlueConfig, prog: str) -> logging.Logger:
     """sets up logging for the app and returns the root logger"""
     log_format = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -40,11 +40,12 @@ def from_config(config: MultiConfig) -> logging.Logger:
 
     # write the given muticonfig to the logs (redacting the passwords)
     logger.info(
-        "Starting with config: %s",
+        "Starting %s with config: %s",
+        prog,
         json.dumps(
             {
-                k: (v if "password" not in k else "--PASSWORD REDACTED--")
-                for k, v in config.asdict().items()
+                k: (config[k] if "password" not in k else "--PASSWORD REDACTED--")
+                for k in config
             },
             indent=2,
         ),
