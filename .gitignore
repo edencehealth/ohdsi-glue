@@ -1,7 +1,8 @@
-**/*.env
-**/.env
-**/.env.*
-**/.mypy_cache
-**/.venv
-**/.vscode
-**/venv
+*.env
+.env
+.env.*
+.mypy_cache
+.venv
+.vscode
+venv
+__pycache__
