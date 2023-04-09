@@ -4,6 +4,7 @@
 **/.mypy_cache
 **/.venv
 **/.vscode
+**/__pycache__
 **/venv
 .git
 .github

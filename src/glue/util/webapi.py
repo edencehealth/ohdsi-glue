@@ -6,7 +6,7 @@ from typing import Dict, Union
 
 import requests
 
-from .multiconfig import MultiConfig
+from .glueconfig import GlueConfig
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +38,10 @@ class BearerAuth(requests.auth.AuthBase):
 class WebAPIClient:
     """class for communicating with webapi (as a web api)"""
 
-    def __init__(self, config: MultiConfig):
+    def __init__(self, config: GlueConfig):
         self.config = config
         self.auth = None
-        if self.config.enable_basic_security:
+        if self.config.atlas_username and self.config.atlas_password:
             self.login()
 
     def login(self):
