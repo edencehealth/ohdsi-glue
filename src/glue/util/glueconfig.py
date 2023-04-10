@@ -3,12 +3,9 @@
 # pylint: disable=too-few-public-methods
 from typing import Optional
 
-from basecfg import BaseCfg
-
-opt = BaseCfg.optfunc()
+from basecfg import BaseCfg, opt
 
 
-@opt.link
 class GlueConfig(BaseCfg):
     """class which captures the runtime configuration of the app"""
 
