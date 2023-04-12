@@ -1,5 +1,6 @@
-basecfg~=2.0.0
+basecfg~=2.1.0
+baselog~=2.0.1
 bcrypt~=4.0.1
 ctds~=1.14.0
-psycopg2-binary~=2.9.5
+psycopg2-binary~=2.9.6
 requests~=2.28.2
