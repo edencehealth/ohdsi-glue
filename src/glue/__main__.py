@@ -2,8 +2,6 @@
 """ ohdsi_glue entrypoint """
 # stdlib imports
 import os
-import sys
-import traceback
 from typing import Final
 
 # local imports
@@ -30,18 +28,10 @@ def main() -> None:
         config.source_key = glue.derived_source_key(config)
 
     # setup logging
-    logger = loggingsetup.from_config(config, PROG)
+    loggingsetup.from_config(config, f"{PROG} {VERSION}")
 
-    try:
-        glue.glue_it(config)
-    except KeyboardInterrupt:
-        print("\n")
-        logger.warning("KeyboardInterrupt detected, exiting.")
-
-    except Exception as uncaught_exception:  # pylint: disable=W0718
-        logger.fatal("UNCAUGHT EXCEPTION: %s", str(uncaught_exception).strip())
-        logger.fatal("TRACEBACK: %s", traceback.format_exc())
-        sys.exit(1)
+    # do the thing
+    glue.glue_it(config)
 
 
 if __name__ == "__main__":
