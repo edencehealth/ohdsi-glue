@@ -224,3 +224,11 @@ class GlueConfig(BaseCfg):
             "https://github.com/OHDSI/WebAPI/wiki/Basic-Security-Configuration)"
         ),
     )
+
+    update_passwords: bool = opt(
+        default=False,
+        doc=(
+            "enable glue to update the password for existing atlas users when "
+            "verifying the basic security configuration"
+        ),
+    )
