@@ -189,6 +189,41 @@ def get_sec_roles(config: GlueConfig, app_db: MultiDB) -> List[SecRole]:
     ]
 
 
+def bcrypt_hash(cleartext: str) -> str:
+    """
+    hash the given cleartext password using bcrypt and return a string value
+    suitable for storage in a database
+    """
+    return bcrypt.hashpw(
+        cleartext.encode("utf-8", errors="strict"),
+        bcrypt.gensalt(prefix=b"2a"),
+    ).decode("utf-8", errors="strict")
+
+
+def update_basic_security_user(
+    config: GlueConfig, sec_db: MultiDB, username: str, password: str
+):
+    """update the password for an existing basic security user"""
+
+    logger.info("updating the password for the user %s", username)
+
+    update_password_query = """
+    UPDATE
+        {ID_schema}.users
+    SET
+        password_hash={password_hash}
+    WHERE
+        username={username};
+    """.strip()
+    sec_db.execute(
+        update_password_query,
+        ID_schema=config.security_schema,
+        username=username,
+        password_hash=bcrypt_hash(password),
+    )
+    logger.debug("done")
+
+
 def ensure_basic_security_user(
     config: GlueConfig, sec_db: MultiDB, username: str, password: str
 ):
@@ -204,6 +239,8 @@ def ensure_basic_security_user(
     users = sec_db.get_column(get_users_query, ID_schema=config.security_schema)
     if username in users:
         logger.debug("found the user %s in the database", username)
+        if config.update_passwords:
+            update_basic_security_user(config, sec_db, username, password)
         return
 
     logger.debug("the user %s was not found; creating...", username)
@@ -225,10 +262,7 @@ def ensure_basic_security_user(
         username=username,
         firstname=username,
         lastname="",
-        password_hash=bcrypt.hashpw(
-            password.encode("utf-8", errors="strict"),
-            bcrypt.gensalt(prefix=b"2a"),
-        ).decode("utf-8", errors="strict"),
+        password_hash=bcrypt_hash(password),
     )
     logger.debug("done")
 
