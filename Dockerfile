@@ -11,7 +11,7 @@ RUN set -eux; \
   $AG install \
     build-essential \
     freetds-dev \
-    python-dev \
+    python3-dev \
     strace \
     unixodbc-dev \
   ; \
