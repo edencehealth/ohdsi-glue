@@ -12,4 +12,5 @@ jobs:
     uses: edencehealth/workflows/.github/workflows/dockerimage.yml@v1
     with:
       container_name: ohdsi-glue
+      push_readme: "./README.md"
     secrets: inherit
