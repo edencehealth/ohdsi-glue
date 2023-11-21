@@ -4,7 +4,7 @@ import functools
 import re
 from typing import Any, Final, Tuple
 
-# the following regex was tweaked one on from https://semver.org/
+# the following regex was tweaked from one on https://semver.org/
 semver: Final = re.compile(
     r"^"
     r"(?:[vVrR])?"

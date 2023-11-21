@@ -94,8 +94,8 @@ class MultiDB(contextlib.AbstractContextManager):
         """
         given a sql query with python str.format-style paramater references,
         adjust the paramater references to use the paramstyle appropriate for
-        the DB API dialect.
-        additionally; if the given params start with the identifier_prefix or
+        the DB API dialect;
+        additionally: if the given params start with the identifier_prefix or
         the literal_prefix, safety-check those values then interpolate them
         into the query
         returns a query_str, params_dict tuple suitable for passing to the db
