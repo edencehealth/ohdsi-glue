@@ -1,10 +1,11 @@
 # OHDSI Glue
 
-a utility container for configuring WebAPI
-
-This container is currently able to connect CDM sources to WebAPI, however unfortunately webapi does not currently build the security contexts for the added sources until it has been restarted.
+OHDSI Glue is a container designed specifically to facilitate the setup and ongoing maintenance of OHDSI & EHDEN tool deployments, including [Atlas](https://github.com/OHDSI/Atlas), [WebAPI](https://github.com/OHDSI/WebAPI), [Achilles](https://github.com/OHDSI/Achilles), [DataQualityDashboard](https://github.com/OHDSI/DataQualityDashboard), [CDMInspection](https://github.com/ehden/CDMInspection), [CatalogueExport](https://github.com/ehden/CatalogueExport), among others. The primary function of OHDSI Glue is to simplify the configuration process for WebAPI. It serves as a practical tool for users of the OHDSI & EHDEN suite, aiming to streamline operations and reduce manual intervention in maintaining the deployments.
 
 ## usage
+
+GitHub Repo: <https://github.com/edencehealth/ohdsi-glue>
+Docker Hub Repo: <https://hub.docker.com/r/edence/ohdsi-glue>
 
 The container produces the following help text when invoked with the `-h` or `--help` arguments:
 
@@ -37,6 +38,7 @@ usage: glue [-h] [--version] [--log-level {DEBUG,INFO,WARNING,ERROR}]
             [--enable-result-init | --no-enable-result-init]
             [--enable-source-setup | --no-enable-source-setup]
             [--enable-basic-security | --no-enable-basic-security]
+            [--update-passwords | --no-update-passwords]
 
 Utility for working with OHDSI WebAPI and related apps
 
@@ -45,115 +47,119 @@ options:
   --version             show program's version number and exit
   --log-level {DEBUG,INFO,WARNING,ERROR}
                         how verbosely to log (one of: DEBUG, INFO, WARNING,
-                        ERROR) (default DEBUG)
-  --log-dir LOG_DIR     directory in which to create run logs (default logs)
+                        ERROR) (default: 'DEBUG')
+  --log-dir LOG_DIR     directory in which to create run logs (default:
+                        'logs')
   --input-dir INPUT_DIR
                         directory from which to load CSV-format input data
-                        files (default input)
+                        files (default: 'input')
   --batch-size BATCH_SIZE
                         batch size to use during bulk insert, see
                         https://zillow.github.io/ctds/bulk_insert.html#batch-
-                        size (default None)
+                        size (default: None)
   --atlas-username ATLAS_USERNAME
                         an admin user which will be created in the basic
-                        security database (default admin)
+                        security database (default: 'admin')
   --atlas-password ATLAS_PASSWORD
                         the password associated the atlas_username account
-                        (default )
+                        (default: '')
   --db-dialect {postgresql,sql server}
-                        the sql database dialect (default postgresql)
+                        the sql database dialect (default: 'postgresql')
   --db-server DB_SERVER
                         host address of the database to load data into
-                        (default db:1433)
+                        (default: 'db:1433')
   --db-username DB_USERNAME
                         username to use when connecting to the database
-                        (default postgres)
+                        (default: 'postgres')
   --db-password DB_PASSWORD
                         password associated with the given db_username
-                        (default )
+                        (default: '')
   --db-database DB_DATABASE
-                        name of database on the server to write to (default
-                        cdm)
+                        name of database on the server to write to (default:
+                        'cdm')
   --cdm-db-dialect {postgresql,sql server}
                         sql database dialect of the OMOP CDM database to
-                        connect to WebAPI (default postgresql)
+                        connect to WebAPI (default: 'postgresql')
   --cdm-db-server CDM_DB_SERVER
                         host address of the OMOP CDM database to connect to
-                        WebAPI (default sourcedb:1433)
+                        WebAPI (default: 'sourcedb:1433')
   --cdm-db-username CDM_DB_USERNAME
                         username of the OMOP CDM database to connect to WebAPI
-                        (default postgres)
+                        (default: 'postgres')
   --cdm-db-password CDM_DB_PASSWORD
                         password of the OMOP CDM database to connect to WebAPI
-                        (default )
+                        (default: '')
   --cdm-db-database CDM_DB_DATABASE
                         name of of the OMOP CDM database to connect to WebAPI
-                        (default cdm)
+                        (default: 'cdm')
   --security-db-dialect {postgresql,sql server}
                         sql database dialect of the WebAPI basic security
-                        database (default postgresql)
+                        database (default: 'postgresql')
   --security-db-server SECURITY_DB_SERVER
                         host address of the WebAPI basic security database
-                        (default sourcedb:1433)
+                        (default: 'sourcedb:1433')
   --security-db-username SECURITY_DB_USERNAME
                         username of the WebAPI basic security database
-                        (default postgres)
+                        (default: 'postgres')
   --security-db-password SECURITY_DB_PASSWORD
                         password of the WebAPI basic security database
-                        (default )
+                        (default: '')
   --security-db-database SECURITY_DB_DATABASE
-                        name of of the WebAPI basic security database (default
-                        basic_security)
+                        name of of the WebAPI basic security database
+                        (default: 'basic_security')
   --webapi-addr WEBAPI_ADDR
                         the hostname (and optional port) of the webapi
-                        instance (default webapi)
+                        instance (default: 'webapi')
   --webapi-tls, --no-webapi-tls
                         boolean that determines if http or https should be
-                        used to communicate with webapi (default True)
+                        used to communicate with webapi (default: True)
   --webapi-base-path WEBAPI_BASE_PATH
                         the path to WebAPI on its host, this is almost always
-                        /WebAPI (default /WebAPI)
+                        /WebAPI (default: '/WebAPI')
   --init-concept-hierarchy, --no-init-concept-hierarchy
                         whether to establish the concept_hierarchy (a cached
                         version of the OMOP vocabulary specific to the
-                        concepts found in your CDM) (default True)
+                        concepts found in your CDM) (default: True)
   --ohdsi-schema OHDSI_SCHEMA
                         the schema used by webapi to manage its own
-                        configuration and other state (default ohdsi)
+                        configuration and other state (default: 'ohdsi')
   --security-schema SECURITY_SCHEMA
-                        (default basic_security)
+                        (default: 'basic_security')
   --cdm-schema CDM_SCHEMA
-                        (default cdm)
+                        (default: 'cdm')
   --results-schema RESULTS_SCHEMA
-                        (default results)
+                        (default: 'results')
   --temp-schema TEMP_SCHEMA
-                        (default temp)
+                        (default: 'temp')
   --vocab-schema VOCAB_SCHEMA
-                        (default vocabulary)
+                        (default: 'vocabulary')
   --source-name SOURCE_NAME
                         the name of the data source, used by webapi to refer
-                        to the data source (default My Cdm)
+                        to the data source (default: 'My Cdm')
   --source-cache, --no-source-cache
                         determines is_cache_enabled when adding a CDM source
-                        to WebAPI (default True)
+                        to WebAPI (default: True)
   --source-key SOURCE_KEY
                         a key identifying the data source, used by webapi, if
-                        not given it will be derived from source_name (default
-                        None)
+                        not given it will be derived from source_name
+                        (default: None)
   --enable-result-init, --no-enable-result-init
                         enable setting up the results tables (see:
                         https://github.com/OHDSI/WebAPI/wiki/CDM-
-                        Configuration#results-schema-setup) (default True)
+                        Configuration#results-schema-setup) (default: True)
   --enable-source-setup, --no-enable-source-setup
                         enable setting up the WebAPI source & source_daimon
                         tables (see: https://github.com/OHDSI/WebAPI/wiki/CDM-
                         Configuration#source-and-source_daimon-table-setup)
-                        (default True)
+                        (default: True)
   --enable-basic-security, --no-enable-basic-security
                         enable setting up the basic security schema & table
                         (see: https://github.com/OHDSI/WebAPI/wiki/Basic-
-                        Security-Configuration) (default True)
-
+                        Security-Configuration) (default: True)
+  --update-passwords, --no-update-passwords
+                        enable glue to update the password for existing atlas
+                        users when verifying the basic security configuration
+                        (default: False)
 ```
 
 ## resources
