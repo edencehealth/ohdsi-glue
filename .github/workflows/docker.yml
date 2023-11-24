@@ -21,4 +21,5 @@ jobs:
     with:
       container_name: ohdsi-glue
       push_readme: README.md
+      push: true
     secrets: inherit
