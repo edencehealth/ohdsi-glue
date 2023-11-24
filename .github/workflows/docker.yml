@@ -6,6 +6,14 @@ name: Docker
       - main
     tags:
       - '*.*.*'
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+    branches:
+      - main
 
 jobs:
   image:
