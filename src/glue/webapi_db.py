@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
-""" primary functionality for gluing various ohdsi bits together """
+""" classes and functions for manipulating the WebAPI appdb directly """
 # pylint: disable=R0913
 import logging
 import re
-from typing import Any, List, NamedTuple
+from typing import List, NamedTuple
 
-import bcrypt
-
-from ..db.multidb import MultiDB
-from ..db.utils import ensure_schema, ensure_table
-from ..sql import queries
-from . import semver, webapi
-from .glueconfig import GlueConfig
+from . import semver
+from .config import GlueConfig
+from .db.multidb import MultiDB
+from .util.security import bcrypt_hash
 
 logger = logging.getLogger(__name__)
 
@@ -47,127 +44,6 @@ class CDMSourceDaimon(NamedTuple):
     priority: int
 
 
-def glue_it(config: GlueConfig) -> Any:
-    """
-    connect to the database, create the results schema, tell webapi how to connect to
-    the cdm source
-    """
-
-    # this will be converted to a webapi.WebAPIClient instance shortly
-    api = None
-
-    if config.enable_basic_security:
-        # this has to go first, the other methods rely on being able to
-        # communicate with webapi using bearer auth
-        logger.info("enable_basic_security: connecting to security database")
-        with MultiDB(
-            config.security_db_dialect,
-            config.security_db_server,
-            config.security_db_username,
-            config.security_db_password,
-            config.security_db_database,
-        ) as security_db:
-            logger.info(
-                "enable_basic_security: ensuring the basic security schema is setup"
-            )
-
-            # ensure the schema exists
-            ensure_schema(security_db, config.security_schema)
-
-            # ensure the users table exists
-            ensure_table(
-                security_db,
-                config.security_schema,
-                "users",
-                queries["basic_security_users"],
-            )
-
-            # ensure the atlas user exists in the users table
-            ensure_basic_security_user(
-                config,
-                security_db,
-                config.atlas_username,
-                config.atlas_password,
-            )
-
-            # sign-in with no-privs to init the sec_* tables entries
-            api = webapi.WebAPIClient(config)
-
-            # now augment those entries...
-            with MultiDB(
-                config.db_dialect,
-                config.db_server,
-                config.db_username,
-                config.db_password,
-                config.db_database,
-            ) as app_db:
-                ensure_admin_role(config, app_db, config.atlas_username)
-            logger.info("enable_basic_security: done")
-
-    if api is None:
-        api = webapi.WebAPIClient(config)
-
-    api_info = api.get_info()
-    webapi_version = semver.SemVer(str(api_info["version"]))
-
-    if config.enable_result_init:
-        logger.info("enable_result_init: connecting to CDM database")
-        with MultiDB(
-            config.cdm_db_dialect,
-            config.cdm_db_server,
-            config.cdm_db_username,
-            config.cdm_db_password,
-            config.cdm_db_database,
-        ) as cdm_db:
-            logger.info("enable_result_init: starting")
-            # ensure the results schema exists
-            # creating it here will not enable our next steps, but it
-            # may be helpful if the other tools aren't creating it
-            ensure_schema(cdm_db, config.results_schema)
-
-            # see if the results.cohort table exists, if so init has already happened
-            canary_table = "cohort"
-            if canary_table in cdm_db.list_tables(config.results_schema):
-                logger.info(
-                    (
-                        "enable_result_init: found canary table (%s), init has already "
-                        "happened"
-                    ),
-                    canary_table,
-                )
-            else:
-                result_table_init_sql = api.get_results_sql()
-                logger.info(
-                    "got %s-byte sql blob from webapi. Executing...",
-                    len(result_table_init_sql),
-                )
-                cdm_db.execute(result_table_init_sql)
-                logger.info("enable_result_init: done")
-
-    if config.enable_source_setup:
-        logger.info("enable_source_setup: connecting to app database")
-        with MultiDB(
-            config.db_dialect,
-            config.db_server,
-            config.db_username,
-            config.db_password,
-            config.db_database,
-        ) as app_db:
-            logger.info(
-                (
-                    "enable_source_setup: create webapi source/source_daimon entries "
-                    "in app database..."
-                )
-            )
-            ensure_webapi_source(config, app_db, webapi_version)
-            ensure_webapi_source_daimons(config, app_db)
-            logger.info("enable_source_setup: refreshing webapi sources")
-            api.source_refresh()
-            logger.info("enable_source_setup: done")
-
-    logger.info("done")
-
-
 def get_sec_roles(config: GlueConfig, app_db: MultiDB) -> List[SecRole]:
     """return a list of user records from the webapi sec_* databases"""
     # NOTE: this is not an f-string, these values are expanded by multidb
@@ -187,17 +63,6 @@ def get_sec_roles(config: GlueConfig, app_db: MultiDB) -> List[SecRole]:
     return [
         SecRole(*row) for row in app_db.get_rows(query, ID_schema=config.ohdsi_schema)
     ]
-
-
-def bcrypt_hash(cleartext: str) -> str:
-    """
-    hash the given cleartext password using bcrypt and return a string value
-    suitable for storage in a database
-    """
-    return bcrypt.hashpw(
-        cleartext.encode("utf-8", errors="strict"),
-        bcrypt.gensalt(prefix=b"2a"),
-    ).decode("utf-8", errors="strict")
 
 
 def update_basic_security_user(
@@ -320,7 +185,7 @@ def ensure_webapi_source(
     ensure that the webapi source table has an entry for the current cdm config
     """
 
-    if config.cdm_db_dialect == "sql server":
+    if config.cdm_db_dialect in ("sqlserver", "sql server"):
         jdbc_url = (
             f"jdbc:sqlserver://{config.cdm_db_server}"
             f";databaseName={config.cdm_db_database}"

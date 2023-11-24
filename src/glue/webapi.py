@@ -2,11 +2,12 @@
 """ interactions with OHDSI WebAPI, over its web API """
 # pylint: disable=R0903
 import logging
-from typing import Dict, Union
+from typing import Any, Dict, Optional, Union
 
 import requests
 
-from .glueconfig import GlueConfig
+from .config import GlueConfig
+from .semver import SemVer
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,9 @@ class BearerAuth(requests.auth.AuthBase):
 class WebAPIClient:
     """class for communicating with webapi (as a web api)"""
 
+    version: Optional[SemVer]
+    info: Dict[str, Any]
+
     def __init__(self, config: GlueConfig):
         self.config = config
         self.auth = None
@@ -55,6 +59,8 @@ class WebAPIClient:
         )
         response.raise_for_status()
         self.auth = BearerAuth(response.headers["Bearer"])
+        self.info = self.get_info()
+        self.version = SemVer(str(self.info["version"]))
 
     def path_url(self, path: str) -> str:
         """return the full url for the given webapi path"""
@@ -88,7 +94,7 @@ class WebAPIClient:
         logger.debug("sending source refresh request")
         self.get("/source/refresh").raise_for_status()
 
-    def get_results_sql(self):
+    def get_results_ddl(self):
         """
         get SQL code which can be used to establish the results schema
         """
@@ -102,6 +108,25 @@ class WebAPIClient:
             else "false",
         }
         result = self.get("/ddl/results", params=params)
+        result.raise_for_status()
+        return result.text
+
+    def get_achilles_ddl(self):
+        """
+        get SQL code which can be used to (as of WebAPI v2.13) create the
+        concept count tables in the CDM DB
+
+        From <https://github.com/OHDSI/WebAPI/wiki/CDM-Configuration>:
+        > This DDL assumes you have run Achilles and it will use those tables
+        to create the concept count table that is used to power the vocabulary
+        search
+        """
+        params = {
+            "dialect": self.config.db_dialect,
+            "schema": self.config.results_schema,
+            "vocabSchema": self.config.vocab_schema,
+        }
+        result = self.get("/ddl/achilles", params=params)
         result.raise_for_status()
         return result.text
 

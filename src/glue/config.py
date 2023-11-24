@@ -200,6 +200,16 @@ class GlueConfig(BaseCfg):
         ),
     )
 
+    enable_concept_count_init: bool = opt(
+        default=False,
+        doc=(
+            "enable creating the concept count table(s) (see: "
+            "https://github.com/OHDSI/WebAPI/wiki/CDM-Configuration"
+            "#concept-count-tables)"
+            "NOTE: this assumes you have already run achilles"
+        ),
+    )
+
     enable_result_init: bool = opt(
         default=True,
         doc=(
@@ -232,3 +242,33 @@ class GlueConfig(BaseCfg):
             "verifying the basic security configuration"
         ),
     )
+
+    def app_db_params(self) -> tuple[str, str, str, str, str]:
+        """returns the connection parameters associated with the app db"""
+        return (
+            self.db_dialect,
+            self.db_server,
+            self.db_username,
+            self.db_password,
+            self.db_database,
+        )
+
+    def cdm_db_params(self) -> tuple[str, str, str, str, str]:
+        """returns the connection parameters associated with the cdm db"""
+        return (
+            self.cdm_db_dialect,
+            self.cdm_db_server,
+            self.cdm_db_username,
+            self.cdm_db_password,
+            self.cdm_db_database,
+        )
+
+    def security_db_params(self) -> tuple[str, str, str, str, str]:
+        """returns the connection parameters associated with the security db"""
+        return (
+            self.security_db_dialect,
+            self.security_db_server,
+            self.security_db_username,
+            self.security_db_password,
+            self.security_db_database,
+        )

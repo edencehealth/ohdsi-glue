@@ -4,8 +4,8 @@ OHDSI Glue is a container designed specifically to facilitate the setup and ongo
 
 ## usage
 
-GitHub Repo: <https://github.com/edencehealth/ohdsi-glue>
-Docker Hub Repo: <https://hub.docker.com/r/edence/ohdsi-glue>
+* GitHub Repo: <https://github.com/edencehealth/ohdsi-glue>
+* Docker Hub Repo: <https://hub.docker.com/r/edence/ohdsi-glue>
 
 The container produces the following help text when invoked with the `-h` or `--help` arguments:
 
@@ -35,6 +35,7 @@ usage: glue [-h] [--version] [--log-level {DEBUG,INFO,WARNING,ERROR}]
             [--temp-schema TEMP_SCHEMA] [--vocab-schema VOCAB_SCHEMA]
             [--source-name SOURCE_NAME] [--source-cache | --no-source-cache]
             [--source-key SOURCE_KEY]
+            [--enable-concept-count-init | --no-enable-concept-count-init]
             [--enable-result-init | --no-enable-result-init]
             [--enable-source-setup | --no-enable-source-setup]
             [--enable-basic-security | --no-enable-basic-security]
@@ -143,6 +144,11 @@ options:
                         a key identifying the data source, used by webapi, if
                         not given it will be derived from source_name
                         (default: None)
+  --enable-concept-count-init, --no-enable-concept-count-init
+                        enable creating the concept count table(s) (see:
+                        https://github.com/OHDSI/WebAPI/wiki/CDM-
+                        Configuration#concept-count-tables)NOTE: this assumes
+                        you have already run achilles (default: False)
   --enable-result-init, --no-enable-result-init
                         enable setting up the results tables (see:
                         https://github.com/OHDSI/WebAPI/wiki/CDM-
