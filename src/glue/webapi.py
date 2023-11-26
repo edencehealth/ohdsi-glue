@@ -130,6 +130,20 @@ class WebAPIClient:
         result.raise_for_status()
         return result.text
 
+    def get_cem_results_ddl(self):
+        """
+        Get DDL used to establish the Common Evidence Model results schema in
+        the CDMDB
+        """
+        params = {
+            "dialect": self.config.db_dialect,
+            "schema": self.config.cem_results_schema,
+            "vocabSchema": self.config.vocab_schema,
+        }
+        result = self.get("/ddl/cemresults", params=params)
+        result.raise_for_status()
+        return result.text
+
     def get_info(self) -> Dict[str, Union[str, int, float]]:
         """ask for webapi instance information"""
         return self.get("info").json()

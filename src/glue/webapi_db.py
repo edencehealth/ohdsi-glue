@@ -364,7 +364,10 @@ def ensure_webapi_source_daimons(config: GlueConfig, app_db: MultiDB):
 
 
 def update_source(
-    config: GlueConfig, app_db: MultiDB, jdbc_url: str, webapi_version: semver.SemVer
+    config: GlueConfig,
+    app_db: MultiDB,
+    jdbc_url: str,
+    webapi_version: semver.SemVer,
 ):
     """update a webapi CDM source entry"""
     if webapi_version >= "2.12.0":
@@ -401,7 +404,10 @@ def update_source(
 
 
 def create_source(
-    config: GlueConfig, app_db: MultiDB, jdbc_url: str, webapi_version: semver.SemVer
+    config: GlueConfig,
+    app_db: MultiDB,
+    jdbc_url: str,
+    webapi_version: semver.SemVer,
 ):
     """create a webapi CDM source entry"""
     if webapi_version >= "2.12.0":

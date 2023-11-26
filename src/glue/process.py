@@ -7,6 +7,7 @@ from typing import Any
 from . import webapi
 from .config import GlueConfig
 from .operations import (
+    init_cem_results_schema,
     init_concept_count,
     init_results_schema,
     init_sources,
@@ -28,6 +29,9 @@ def glue_it(config: GlueConfig) -> Any:
 
     if config.enable_result_init:
         init_results_schema.run(config, api)
+
+    if config.enable_cem_results_init:
+        init_cem_results_schema.run(config, api)
 
     if config.enable_concept_count_init:
         init_concept_count.run(config, api)

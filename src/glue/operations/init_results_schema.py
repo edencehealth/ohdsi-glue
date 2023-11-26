@@ -34,4 +34,4 @@ def run(config: GlueConfig, api: WebAPIClient):
         ddl = api.get_results_ddl()
         logger.info("got %s-byte sql blob from webapi. Executing...", len(ddl))
         cdm_db.execute(ddl)
-        logger.info("done")
+    logger.info("done")

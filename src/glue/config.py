@@ -165,6 +165,11 @@ class GlueConfig(BaseCfg):
         doc="",
     )
 
+    cem_schema: str = opt(
+        default="cemresults",
+        doc='Common Evidence Model ("CEM") results schema',
+    )
+
     results_schema: str = opt(
         default="results",
         doc="",
@@ -198,6 +203,11 @@ class GlueConfig(BaseCfg):
             "a key identifying the data source, used by webapi, if not given it "
             "will be derived from source_name"
         ),
+    )
+
+    enable_cem_results_init: bool = opt(
+        default=False,
+        doc=("enable creating the Common Evidence Model results schema"),
     )
 
     enable_concept_count_init: bool = opt(
