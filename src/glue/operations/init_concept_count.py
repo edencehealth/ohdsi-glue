@@ -23,13 +23,6 @@ def run(config: GlueConfig, api: WebAPIClient):
     logger.info("connecting to CDM database")
     with MultiDB(*config.cdm_db_params()) as cdm_db:
         logger.info("starting")
-        canary_table = "achilles_result_concept_count"
-        if canary_table in cdm_db.list_tables(config.results_schema):
-            logger.info(
-                "found canary table (%s), init has already happened",
-                canary_table,
-            )
-            return
         ddl = api.get_achilles_ddl()
         logger.info("got %s-byte sql blob from webapi. Executing...", len(ddl))
         cdm_db.execute(ddl)
