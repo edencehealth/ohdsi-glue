@@ -31,15 +31,17 @@ usage: glue [-h] [--version] [--log-level {DEBUG,INFO,WARNING,ERROR}]
             [--webapi-base-path WEBAPI_BASE_PATH]
             [--init-concept-hierarchy | --no-init-concept-hierarchy]
             [--ohdsi-schema OHDSI_SCHEMA] [--security-schema SECURITY_SCHEMA]
-            [--cdm-schema CDM_SCHEMA] [--results-schema RESULTS_SCHEMA]
-            [--temp-schema TEMP_SCHEMA] [--vocab-schema VOCAB_SCHEMA]
-            [--source-name SOURCE_NAME] [--source-cache | --no-source-cache]
-            [--source-key SOURCE_KEY]
+            [--cdm-schema CDM_SCHEMA] [--cem-schema CEM_SCHEMA]
+            [--results-schema RESULTS_SCHEMA] [--temp-schema TEMP_SCHEMA]
+            [--vocab-schema VOCAB_SCHEMA] [--source-name SOURCE_NAME]
+            [--source-cache | --no-source-cache] [--source-key SOURCE_KEY]
+            [--enable-cem-results-init | --no-enable-cem-results-init]
             [--enable-concept-count-init | --no-enable-concept-count-init]
             [--enable-result-init | --no-enable-result-init]
             [--enable-source-setup | --no-enable-source-setup]
             [--enable-basic-security | --no-enable-basic-security]
             [--update-passwords | --no-update-passwords]
+            [--bulk-user-file BULK_USER_FILE]
 
 Utility for working with OHDSI WebAPI and related apps
 
@@ -128,6 +130,9 @@ options:
                         (default: 'basic_security')
   --cdm-schema CDM_SCHEMA
                         (default: 'cdm')
+  --cem-schema CEM_SCHEMA
+                        Common Evidence Model ("CEM") results schema (default:
+                        'cemresults')
   --results-schema RESULTS_SCHEMA
                         (default: 'results')
   --temp-schema TEMP_SCHEMA
@@ -144,6 +149,9 @@ options:
                         a key identifying the data source, used by webapi, if
                         not given it will be derived from source_name
                         (default: None)
+  --enable-cem-results-init, --no-enable-cem-results-init
+                        enable creating the Common Evidence Model results
+                        schema (default: False)
   --enable-concept-count-init, --no-enable-concept-count-init
                         enable creating the concept count table(s) (see:
                         https://github.com/OHDSI/WebAPI/wiki/CDM-
@@ -166,6 +174,11 @@ options:
                         enable glue to update the password for existing atlas
                         users when verifying the basic security configuration
                         (default: False)
+  --bulk-user-file BULK_USER_FILE
+                        create/update user accounts from a csv file; requires
+                        these headings:
+                        username,password,firstname,middlename,lastname
+                        (default: None)
 ```
 
 ## resources
