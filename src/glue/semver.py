@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """utils for dealing with Semantic Versioning strings"""
+# pylint: disable=too-many-return-statements
 import functools
 import re
 from typing import Any, Final, Tuple
@@ -111,6 +112,7 @@ class SemVer:
                 if a == b:
                     continue
                 return a < b
+            return False  # self and other are equal
         if isinstance(other, str):
             return self < self.__class__(other)
         if isinstance(other, float):

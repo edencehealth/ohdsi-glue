@@ -5,6 +5,8 @@ from typing import Optional
 
 from basecfg import BaseCfg, opt
 
+from .models import BasicSecurityUserBulkEntry
+
 
 class GlueConfig(BaseCfg):
     """class which captures the runtime configuration of the app"""
@@ -165,6 +167,11 @@ class GlueConfig(BaseCfg):
         doc="",
     )
 
+    cem_schema: str = opt(
+        default="cemresults",
+        doc='Common Evidence Model ("CEM") results schema',
+    )
+
     results_schema: str = opt(
         default="results",
         doc="",
@@ -197,6 +204,22 @@ class GlueConfig(BaseCfg):
         doc=(
             "a key identifying the data source, used by webapi, if not given it "
             "will be derived from source_name"
+        ),
+        redact=False,
+    )
+
+    enable_cem_results_init: bool = opt(
+        default=False,
+        doc=("enable creating the Common Evidence Model results schema"),
+    )
+
+    enable_concept_count_init: bool = opt(
+        default=False,
+        doc=(
+            "enable creating the concept count table(s) (see: "
+            "https://github.com/OHDSI/WebAPI/wiki/CDM-Configuration"
+            "#concept-count-tables)"
+            "NOTE: this assumes you have already run achilles"
         ),
     )
 
@@ -231,4 +254,41 @@ class GlueConfig(BaseCfg):
             "enable glue to update the password for existing atlas users when "
             "verifying the basic security configuration"
         ),
+        redact=False,
     )
+
+    bulk_user_file: Optional[str] = opt(
+        default=None,
+        doc="create/update user accounts from a csv file; requires these headings: "
+        + ",".join(BasicSecurityUserBulkEntry._fields),
+    )
+
+    def app_db_params(self) -> tuple[str, str, str, str, str]:
+        """returns the connection parameters associated with the app db"""
+        return (
+            self.db_dialect,
+            self.db_server,
+            self.db_username,
+            self.db_password,
+            self.db_database,
+        )
+
+    def cdm_db_params(self) -> tuple[str, str, str, str, str]:
+        """returns the connection parameters associated with the cdm db"""
+        return (
+            self.cdm_db_dialect,
+            self.cdm_db_server,
+            self.cdm_db_username,
+            self.cdm_db_password,
+            self.cdm_db_database,
+        )
+
+    def security_db_params(self) -> tuple[str, str, str, str, str]:
+        """returns the connection parameters associated with the security db"""
+        return (
+            self.security_db_dialect,
+            self.security_db_server,
+            self.security_db_username,
+            self.security_db_password,
+            self.security_db_database,
+        )

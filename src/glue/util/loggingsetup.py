@@ -3,7 +3,7 @@ import logging
 
 from baselog import BaseLog
 
-from .glueconfig import GlueConfig
+from ..config import GlueConfig
 
 
 def from_config(config: GlueConfig, prog: str) -> logging.Logger:

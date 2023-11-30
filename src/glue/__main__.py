@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """ ohdsi_glue entrypoint """
-# stdlib imports
 import os
 from typing import Final
 
-# local imports
-from .util import glue, loggingsetup
-from .util.glueconfig import GlueConfig
+from .config import GlueConfig
+from .process import glue_it
+from .util import loggingsetup
+from .webapi_db import derived_source_key
 
 PROG_TAG: Final = os.environ.get("GIT_TAG", "dev")
 PROG_COMMIT: Final = os.environ.get("GIT_COMMIT", "N/A")
@@ -24,14 +24,15 @@ def main() -> None:
         prog_description="Utility for working with OHDSI WebAPI and related apps",
         version=VERSION,
     )
+    # some final configuration stuff
     if config.source_key is None:
-        config.source_key = glue.derived_source_key(config)
+        config.source_key = derived_source_key(config)
 
     # setup logging
     loggingsetup.from_config(config, f"{PROG} {VERSION}")
 
-    # do the thing
-    glue.glue_it(config)
+    # do the things
+    glue_it(config)
 
 
 if __name__ == "__main__":
