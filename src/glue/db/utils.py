@@ -18,13 +18,13 @@ def ensure_schema(db: MultiDB, schema_name: str):
         db.execute("CREATE schema {ID_schema_name}", ID_schema_name=schema_name)
 
 
-def ensure_table(db: MultiDB, schema: str, table: str, sql_file: str) -> None:
+def ensure_table(db: MultiDB, schema: str, table: str, ddl_filename: str) -> None:
     """if the given table doesn't exist in the database, create it"""
     if table in db.list_tables(schema):
         logger.info("found table '%s.%s' in the database", schema, table)
     else:
         logger.info("table '%s.%s' not found. creating.", schema, table)
-        db.execute_file(sql_file, ID_schema=schema, ID_table=table)
+        db.execute(MultiDB.sqlfile(ddl_filename), ID_schema=schema, ID_table=table)
 
 
 def clear_table(db, table: str) -> None:

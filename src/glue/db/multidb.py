@@ -2,19 +2,32 @@
 """ implementation of class for working with postgres and mssql databases """
 # pylint: disable=R0913
 import contextlib
+import functools
 import logging
 import re
 import string
-from typing import Any, Dict, List, NamedTuple, Tuple
+from importlib import resources
+from typing import Any, Dict, Final, List, NamedTuple, Tuple
 
 from .mssql import connect as mssql_connect
 from .postgres import connect as pg_connect
 
-# note: if you change these you have to update table_info and list_tables
-identifier_prefix = "ID_"
-literal_prefix = "LIT_"
-
+sql_dir = resources.files("glue.sql")
 logger = logging.getLogger(__name__)
+
+# note: if you change these you have to update table_info and list_tables
+identifier_prefix: Final = "ID_"
+literal_prefix: Final = "LIT_"
+
+
+@functools.cache
+def sqlfile(filename: str) -> str:
+    """
+    return the contents of the file in the sql subdir of this package which
+    has the given filename
+    """
+    sql_file = sql_dir.joinpath(filename)
+    return sql_file.read_text()
 
 
 def interpolation_safe(value: str) -> bool:
@@ -192,33 +205,11 @@ class MultiDB(contextlib.AbstractContextManager):
             cursor.execute(final_query, filtered_params)
             self.cnxn.commit()
 
-    def execute_file(
-        self, file_path: str, encoding: str = "utf-8", errors: str = "replace", **params
-    ) -> None:
-        """
-        executes the sql code in the given file using the provided connection
-        additional arguments are passed directly to cursor.execute -- this
-        is useful when there are query params
-        """
-        with open(file_path, "r", encoding=encoding, errors=errors) as sqlfh:
-            sql = sqlfh.read()
-        self.execute(sql, **params)
-
     def table_info(self, table_name: str) -> Dict[str, ColumnInfo]:
         """
         queries the inforamtion schema about the given table
         """
-        sql = """
-        SELECT
-            *
-        FROM
-            INFORMATION_SCHEMA.COLUMNS
-        WHERE
-            TABLE_NAME = {ID_table_name}
-        ORDER BY
-            ORDINAL_POSITION ASC
-        """.strip()
-        info = self.get_rows(sql, ID_table_name=table_name)
+        info = self.get_rows(sqlfile("table_info.sql"), table_name=table_name)
         if not info:
             raise RuntimeError(
                 f"table_info couldn't query INFORMATION_SCHEMA about table {table_name}"
@@ -238,22 +229,16 @@ class MultiDB(contextlib.AbstractContextManager):
 
     def list_schemas(self) -> List[str]:
         """return a list of schemas in the database"""
-        sql = """
-        SELECT
-            schema_name
-        FROM
-            information_schema.schemata
-        """.strip()
-        return self.get_column(sql)
+        return self.get_column(sqlfile("list_schemas.sql"))
 
     def list_tables(self, schema: str) -> List[str]:
         """return a list of tables in the given schema"""
-        sql = """
-        SELECT
-            table_name
-        FROM
-            information_schema.tables
-        WHERE
-            table_schema = {schema}
-        """.strip()
-        return self.get_column(sql, schema=schema)
+        return self.get_column(sqlfile("list_tables.sql"), schema=schema)
+
+    @staticmethod
+    def sqlfile(filename: str) -> str:
+        """
+        return the contents of the file in the sql subdir of this package which
+        has the given filename
+        """
+        return sqlfile(filename)

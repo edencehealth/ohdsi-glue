@@ -5,6 +5,8 @@ from typing import Optional
 
 from basecfg import BaseCfg, opt
 
+from .models import BasicSecurityUserBulkEntry
+
 
 class GlueConfig(BaseCfg):
     """class which captures the runtime configuration of the app"""
@@ -203,6 +205,7 @@ class GlueConfig(BaseCfg):
             "a key identifying the data source, used by webapi, if not given it "
             "will be derived from source_name"
         ),
+        redact=False,
     )
 
     enable_cem_results_init: bool = opt(
@@ -251,6 +254,13 @@ class GlueConfig(BaseCfg):
             "enable glue to update the password for existing atlas users when "
             "verifying the basic security configuration"
         ),
+        redact=False,
+    )
+
+    bulk_user_file: Optional[str] = opt(
+        default=None,
+        doc="create/update user accounts from a csv file; requires these headings: "
+        + ",".join(BasicSecurityUserBulkEntry._fields),
     )
 
     def app_db_params(self) -> tuple[str, str, str, str, str]:
