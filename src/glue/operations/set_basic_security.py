@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """ setup / update the basic security database in the security db """
 import logging
+from typing import Set
 
 from ..config import GlueConfig
 from ..db.multidb import MultiDB
@@ -22,6 +23,7 @@ def run(config: GlueConfig):
     """setup / update the basic security database in the security db"""
     # this has to go first, the other methods rely on being able to
     # communicate with webapi using bearer auth
+    admins: Set[str] = set((config.atlas_username,))
     logger.info("connecting to security database")
     with MultiDB(*config.security_db_params()) as security_db:
         logger.info("ensuring the basic security schema is setup")
@@ -47,13 +49,31 @@ def run(config: GlueConfig):
 
         # if we were given a bulk user CSV file, we create/update/delete those users
         if config.bulk_user_file:
-            bulk_ensure_basic_security_users(config, security_db)
+            logger.info("handling bulk user accounts from %s", config.bulk_user_file)
+            bulk_results = bulk_ensure_basic_security_users(config, security_db)
+            for user, status in bulk_results.items():
+                if status in ("CREATED", "UPDATED"):
+                    # sign-in with no-privs to init the sec_* tables entries
+                    logger.debug(
+                        "logging into WebAPI with %s account to init sec tables",
+                        user.username,
+                    )
+                    _ = WebAPIClient(config, user.username, user.password)
+                if status not in ("DELETED", "ERROR"):
+                    # later we will ensure these accounts have the admin role
+                    admins.add(user.username)
 
     # sign-in with no-privs to init the sec_* tables entries
+    logger.debug(
+        "logging into WebAPI with %s account to init sec tables",
+        config.atlas_username,
+    )
     _ = WebAPIClient(config)
 
     # now augment those entries...
     with MultiDB(*config.app_db_params()) as app_db:
-        ensure_admin_role(config, app_db, config.atlas_username)
+        for username in admins:
+            logger.debug("ensuring admin role for %s", username)
+            ensure_admin_role(config, app_db, username)
 
     logger.info("done")

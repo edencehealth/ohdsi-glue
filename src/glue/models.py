@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """ models used to contain data"""
-from typing import NamedTuple
+from typing import NamedTuple, Type, TypeVar
+
+T = TypeVar("T")
 
 
 class BasicSecurityUser(NamedTuple):
@@ -21,6 +23,14 @@ class BasicSecurityUserBulkEntry(NamedTuple):
     firstname: str
     middlename: str
     lastname: str
+
+    @classmethod
+    def from_BasicSecurityUser(cls: Type[T], user: BasicSecurityUser) -> T:
+        """create an instance from an existing BasicSecurityUser"""
+        user_dict = user._asdict()
+        del user_dict["password_hash"]
+        user_dict["password"] = ""  # nosec: this field is unused downstream
+        return cls(**user_dict)
 
 
 class CDMSource(NamedTuple):

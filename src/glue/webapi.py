@@ -41,11 +41,29 @@ class WebAPIClient:
 
     version: Optional[SemVer]
     info: Dict[str, Any]
+    username: Optional[str]
+    password: Optional[str]
 
-    def __init__(self, config: GlueConfig):
+    def __init__(
+        self,
+        config: GlueConfig,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+    ):
         self.config = config
         self.auth = None
-        if self.config.atlas_username and self.config.atlas_password:
+
+        if username:
+            self.username = username
+        elif config.atlas_username:
+            self.username = config.atlas_username
+
+        if password:
+            self.password = password
+        elif config.atlas_password:
+            self.password = config.atlas_password
+
+        if self.username and self.password:
             self.login()
 
     def login(self):
@@ -53,8 +71,8 @@ class WebAPIClient:
         response = self.post(
             "user/login/db",
             data={
-                "login": self.config.atlas_username,
-                "password": self.config.atlas_password,
+                "login": self.username,
+                "password": self.password,
             },
         )
         response.raise_for_status()

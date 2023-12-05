@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """ classes and functions for manipulating the WebAPI appdb directly """
 # pylint: disable=R0913
-import csv
 import logging
 import re
 from typing import Dict, List, Literal
@@ -16,6 +15,7 @@ from .models import (
     CDMSourceDaimon,
     SecRole,
 )
+from .util.csv import load_typed_csv
 from .util.security import bcrypt_check, bcrypt_hash
 
 logger = logging.getLogger(__name__)
@@ -59,27 +59,18 @@ def update_basic_security_user(
 def bulk_ensure_basic_security_users(
     config: GlueConfig,
     sec_db: MultiDB,
-) -> Dict[str, BULK_USER_STATUS]:
+) -> Dict[BasicSecurityUserBulkEntry, BULK_USER_STATUS]:
     """ensure that the users in the given csv file exist with the given passwords"""
     csv_users: Dict[str, BasicSecurityUserBulkEntry] = {}
     db_users: Dict[str, BasicSecurityUser] = {}
-    result: Dict[str, BULK_USER_STATUS] = {}
+    result: Dict[BasicSecurityUserBulkEntry, BULK_USER_STATUS] = {}
 
     if config.bulk_user_file is None:
         raise RuntimeError("bulk_user_file cannot be none")
 
     # load users from the bulk file
-    with open(
-        config.bulk_user_file, "rt", newline="", encoding="utf-8", errors="strict"
-    ) as csvfh:
-        csvfile = csv.DictReader(
-            csvfh,
-            BasicSecurityUserBulkEntry._fields,
-            dialect=csv.unix_dialect,
-        )
-        for row in csvfile:
-            csv_record = BasicSecurityUserBulkEntry(**row)
-            csv_users[csv_record.username] = csv_record
+    csv_entries = load_typed_csv(config.bulk_user_file, BasicSecurityUserBulkEntry)
+    csv_users = {entry.username: entry for entry in csv_entries}
 
     # load users from the database
     for row in sec_db.get_rows(
@@ -89,29 +80,33 @@ def bulk_ensure_basic_security_users(
         db_record = BasicSecurityUser(*row)
         db_users[db_record.username] = db_record
 
+    # exclude the main atlas admin account from consideration below
+    del db_users[config.atlas_username]
+
     # create the set of operations to perform
     deletes = db_users.keys() - csv_users.keys()  # delete - user in db, not csv
     creates = csv_users.keys() - db_users.keys()  # create - in csv, not db
     updates = db_users.keys() & csv_users.keys()  # update - user in both
 
-    for user in deletes:
-        logger.warning("DELETE USER %s - delete is not currently implemented", user)
+    for username in deletes:
+        logger.warning("DELETE USER %s - delete is not currently implemented", username)
+        user = BasicSecurityUserBulkEntry.from_BasicSecurityUser(db_users[username])
         result[user] = "ERROR"
         # result[user] = BULK_USER_STATUS_DELETED
 
-    for user in updates:
-        csv_record = csv_users[user]
-        if bcrypt_check(csv_record.password, db_users[user].password_hash):
-            logger.debug("OK USER %s", user)
-            result[user] = "OK"
+    for username in updates:
+        csv_record = csv_users[username]
+        if bcrypt_check(csv_record.password, db_users[username].password_hash):
+            logger.debug("OK USER %s", username)
+            result[csv_record] = "OK"
             continue
-        logger.info("UPDATE USER %s", user)
-        update_basic_security_user(config, sec_db, user, csv_record.password)
-        result[user] = "UPDATED"
+        logger.info("UPDATE USER %s", username)
+        update_basic_security_user(config, sec_db, username, csv_record.password)
+        result[csv_record] = "UPDATED"
 
-    for user in creates:
-        csv_record = csv_users[user]
-        logger.info("CREATE USER %s", user)
+    for username in creates:
+        csv_record = csv_users[username]
+        logger.info("CREATE USER %s", username)
         sec_db.execute(
             MultiDB.sqlfile("create_user.sql"),
             ID_schema=config.security_schema,
@@ -121,7 +116,7 @@ def bulk_ensure_basic_security_users(
             lastname=csv_record.lastname,
             password_hash=bcrypt_hash(csv_record.password),
         )
-        result[user] = "CREATED"
+        result[csv_record] = "CREATED"
 
     return result
 
