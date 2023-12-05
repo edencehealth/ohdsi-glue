@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """ classes and functions for manipulating the WebAPI appdb directly """
 # pylint: disable=R0913
-import csv
 import logging
 import re
 from typing import Dict, List, Literal
@@ -16,6 +15,7 @@ from .models import (
     CDMSourceDaimon,
     SecRole,
 )
+from .util.csv import load_typed_csv
 from .util.security import bcrypt_check, bcrypt_hash
 
 logger = logging.getLogger(__name__)
@@ -69,17 +69,8 @@ def bulk_ensure_basic_security_users(
         raise RuntimeError("bulk_user_file cannot be none")
 
     # load users from the bulk file
-    with open(
-        config.bulk_user_file, "rt", newline="", encoding="utf-8", errors="strict"
-    ) as csvfh:
-        csvfile = csv.DictReader(
-            csvfh,
-            BasicSecurityUserBulkEntry._fields,
-            dialect=csv.unix_dialect,
-        )
-        for row in csvfile:
-            csv_record = BasicSecurityUserBulkEntry(**row)
-            csv_users[csv_record.username] = csv_record
+    csv_entries = load_typed_csv(config.bulk_user_file, BasicSecurityUserBulkEntry)
+    csv_users = {entry.username: entry for entry in csv_entries}
 
     # load users from the database
     for row in sec_db.get_rows(
@@ -88,6 +79,9 @@ def bulk_ensure_basic_security_users(
     ):
         db_record = BasicSecurityUser(*row)
         db_users[db_record.username] = db_record
+
+    # exclude the main atlas admin account from consideration below
+    del db_users[config.atlas_username]
 
     # create the set of operations to perform
     deletes = db_users.keys() - csv_users.keys()  # delete - user in db, not csv
@@ -122,6 +116,9 @@ def bulk_ensure_basic_security_users(
             password_hash=bcrypt_hash(csv_record.password),
         )
         result[user] = "CREATED"
+
+    for user in creates | updates:
+        ensure_admin_role(config, sec_db, user)
 
     return result
 
