@@ -66,6 +66,10 @@ def run(config: GlueConfig):
                     admins.add(user.username)
 
     # sign-in with no-privs to init the sec_* tables entries
+    logger.debug(
+        "logging into WebAPI with %s account to init sec tables",
+        config.atlas_username,
+    )
     _ = WebAPIClient(config)
 
     # now augment those entries...

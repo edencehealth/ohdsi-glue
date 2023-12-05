@@ -61,7 +61,7 @@ class WebAPIClient:
         if password:
             self.password = password
         elif config.atlas_password:
-            self.password = config.atlas_username
+            self.password = config.atlas_password
 
         if self.username and self.password:
             self.login()
