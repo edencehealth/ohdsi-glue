@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """ setup / update the basic security database in the security db """
 import logging
+import time
 from typing import Set
 
 from ..config import GlueConfig
@@ -49,11 +50,19 @@ def run(config: GlueConfig):
 
         # if we were given a bulk user CSV file, we create/update/delete those users
         if config.bulk_user_file:
-            ops = bulk_ensure_basic_security_users(config, security_db)
-            for user, status in ops.items():
-                if status not in ("DELETED", "ERROR"):
+            logger.info("handling bulk user accounts from %s", config.bulk_user_file)
+            bulk_results = bulk_ensure_basic_security_users(config, security_db)
+            for user, status in bulk_results.items():
+                if status in ("OK", "CREATED", "UPDATED"):
                     # sign-in with no-privs to init the sec_* tables entries
+                    logger.debug(
+                        "logging into WebAPI with %s account to init sec tables",
+                        user.username,
+                    )
                     _ = WebAPIClient(config, user.username, user.password)
+                    time.sleep(2)
+                if status not in ("DELETED", "ERROR"):
+                    # later we will ensure these accounts have the admin role
                     admins.add(user.username)
 
     # sign-in with no-privs to init the sec_* tables entries
@@ -62,6 +71,7 @@ def run(config: GlueConfig):
     # now augment those entries...
     with MultiDB(*config.app_db_params()) as app_db:
         for username in admins:
+            logger.debug("ensuring admin role for %s", username)
             ensure_admin_role(config, app_db, username)
 
     logger.info("done")
