@@ -59,11 +59,11 @@ def update_basic_security_user(
 def bulk_ensure_basic_security_users(
     config: GlueConfig,
     sec_db: MultiDB,
-) -> Dict[str, BULK_USER_STATUS]:
+) -> Dict[BasicSecurityUserBulkEntry, BULK_USER_STATUS]:
     """ensure that the users in the given csv file exist with the given passwords"""
     csv_users: Dict[str, BasicSecurityUserBulkEntry] = {}
     db_users: Dict[str, BasicSecurityUser] = {}
-    result: Dict[str, BULK_USER_STATUS] = {}
+    result: Dict[BasicSecurityUserBulkEntry, BULK_USER_STATUS] = {}
 
     if config.bulk_user_file is None:
         raise RuntimeError("bulk_user_file cannot be none")
@@ -88,24 +88,25 @@ def bulk_ensure_basic_security_users(
     creates = csv_users.keys() - db_users.keys()  # create - in csv, not db
     updates = db_users.keys() & csv_users.keys()  # update - user in both
 
-    for user in deletes:
-        logger.warning("DELETE USER %s - delete is not currently implemented", user)
+    for username in deletes:
+        logger.warning("DELETE USER %s - delete is not currently implemented", username)
+        user = BasicSecurityUserBulkEntry.from_BasicSecurityUser(db_users[username])
         result[user] = "ERROR"
         # result[user] = BULK_USER_STATUS_DELETED
 
-    for user in updates:
-        csv_record = csv_users[user]
-        if bcrypt_check(csv_record.password, db_users[user].password_hash):
-            logger.debug("OK USER %s", user)
-            result[user] = "OK"
+    for username in updates:
+        csv_record = csv_users[username]
+        if bcrypt_check(csv_record.password, db_users[username].password_hash):
+            logger.debug("OK USER %s", username)
+            result[csv_record] = "OK"
             continue
-        logger.info("UPDATE USER %s", user)
-        update_basic_security_user(config, sec_db, user, csv_record.password)
-        result[user] = "UPDATED"
+        logger.info("UPDATE USER %s", username)
+        update_basic_security_user(config, sec_db, username, csv_record.password)
+        result[csv_record] = "UPDATED"
 
-    for user in creates:
-        csv_record = csv_users[user]
-        logger.info("CREATE USER %s", user)
+    for username in creates:
+        csv_record = csv_users[username]
+        logger.info("CREATE USER %s", username)
         sec_db.execute(
             MultiDB.sqlfile("create_user.sql"),
             ID_schema=config.security_schema,
@@ -115,10 +116,7 @@ def bulk_ensure_basic_security_users(
             lastname=csv_record.lastname,
             password_hash=bcrypt_hash(csv_record.password),
         )
-        result[user] = "CREATED"
-
-    for user in creates | updates:
-        ensure_admin_role(config, sec_db, user)
+        result[csv_record] = "CREATED"
 
     return result
 
