@@ -17,6 +17,7 @@ from .models import (
     SecRole,
 )
 from .util.security import bcrypt_check, bcrypt_hash
+from .webapi import WebAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -72,11 +73,14 @@ def bulk_ensure_basic_security_users(
     with open(
         config.bulk_user_file, "rt", newline="", encoding="utf-8", errors="strict"
     ) as csvfh:
-        csvfile = csv.DictReader(
-            csvfh,
-            BasicSecurityUserBulkEntry._fields,
-            dialect=csv.unix_dialect,
-        )
+        csvfile = csv.DictReader(csvfh, dialect=csv.unix_dialect)
+        # verify fields and header row match
+        if csvfile.fieldnames != list(BasicSecurityUserBulkEntry._fields):
+            logger.error(
+                "header row in csv doesn't match expected headers; have:%s, want:%s",
+                repr(csvfile.fieldnames),
+                repr(list(BasicSecurityUserBulkEntry._fields)),
+            )
         for row in csvfile:
             csv_record = BasicSecurityUserBulkEntry(**row)
             csv_users[csv_record.username] = csv_record
@@ -95,6 +99,8 @@ def bulk_ensure_basic_security_users(
     updates = db_users.keys() & csv_users.keys()  # update - user in both
 
     for user in deletes:
+        # NOTE! WHEN IMPLEMENTING: GATE DELETES BEHIND AN OPT-IN CONFIG VALUE!
+        # existing users are depending on the non-delete batch behavior
         logger.warning("DELETE USER %s - delete is not currently implemented", user)
         result[user] = "ERROR"
         # result[user] = BULK_USER_STATUS_DELETED
@@ -121,6 +127,11 @@ def bulk_ensure_basic_security_users(
             lastname=csv_record.lastname,
             password_hash=bcrypt_hash(csv_record.password),
         )
+        # sign-in with no-privs to init the sec_* tables entries
+        user_config = config
+        user_config.atlas_username = csv_record.username
+        user_config.atlas_password = csv_record.password
+        _ = WebAPIClient(user_config)
         result[user] = "CREATED"
 
     return result
