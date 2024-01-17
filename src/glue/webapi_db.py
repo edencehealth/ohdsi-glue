@@ -17,6 +17,7 @@ from .models import (
     SecRole,
 )
 from .util.security import bcrypt_check, bcrypt_hash
+from .webapi import WebAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,11 @@ def bulk_ensure_basic_security_users(
             lastname=csv_record.lastname,
             password_hash=bcrypt_hash(csv_record.password),
         )
+        # sign-in with no-privs to init the sec_* tables entries
+        user_config = config
+        user_config.atlas_username = csv_record.username
+        user_config.atlas_password = csv_record.password
+        _ = WebAPIClient(user_config)
         result[user] = "CREATED"
 
     return result
