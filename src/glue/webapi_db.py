@@ -72,11 +72,14 @@ def bulk_ensure_basic_security_users(
     with open(
         config.bulk_user_file, "rt", newline="", encoding="utf-8", errors="strict"
     ) as csvfh:
-        csvfile = csv.DictReader(
-            csvfh,
-            BasicSecurityUserBulkEntry._fields,
-            dialect=csv.unix_dialect,
-        )
+        csvfile = csv.DictReader(csvfh, dialect=csv.unix_dialect)
+        # verify fields and header row match
+        if csvfile.fieldnames != BasicSecurityUserBulkEntry._fields:
+            logger.error(
+                "header row in csv doesn't match expected headers; have:%s, want:%s",
+                repr(csvfile.fieldnames),
+                repr(BasicSecurityUserBulkEntry._fields),
+            )
         for row in csvfile:
             csv_record = BasicSecurityUserBulkEntry(**row)
             csv_users[csv_record.username] = csv_record
