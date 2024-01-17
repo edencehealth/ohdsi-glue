@@ -99,6 +99,8 @@ def bulk_ensure_basic_security_users(
     updates = db_users.keys() & csv_users.keys()  # update - user in both
 
     for user in deletes:
+        # NOTE! WHEN IMPLEMENTING: GATE DELETES BEHIND AN OPT-IN CONFIG VALUE!
+        # existing users are depending on the non-delete batch behavior
         logger.warning("DELETE USER %s - delete is not currently implemented", user)
         result[user] = "ERROR"
         # result[user] = BULK_USER_STATUS_DELETED
