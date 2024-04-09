@@ -25,7 +25,7 @@ def run(config: GlueConfig, api: WebAPIClient):
         ensure_schema(cdm_db, config.results_schema)
 
         # see if the results.cohort table exists, if so init has already happened
-        canary_table = "cohort"
+        canary_table = "concept_hierarchy"
         if canary_table in cdm_db.list_tables(config.results_schema):
             logger.info(
                 "found canary table (%s), init has already happened", canary_table
