@@ -122,7 +122,7 @@ class WebAPIClient:
         search
         """
         params = {
-            "dialect": self.config.db_dialect,
+            "dialect": self.config.cdm_db_dialect,
             "schema": self.config.results_schema,
             "vocabSchema": self.config.vocab_schema,
         }
@@ -136,7 +136,7 @@ class WebAPIClient:
         the CDMDB
         """
         params = {
-            "dialect": self.config.db_dialect,
+            "dialect": self.config.cdm_db_dialect,
             "schema": self.config.cem_results_schema,
             "vocabSchema": self.config.vocab_schema,
         }
