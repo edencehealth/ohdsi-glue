@@ -137,7 +137,7 @@ class WebAPIClient:
         """
         params = {
             "dialect": self.config.cdm_db_dialect,
-            "schema": self.config.cem_results_schema,
+            "schema": self.config.results_schema,
             "vocabSchema": self.config.vocab_schema,
         }
         result = self.get("/ddl/cemresults", params=params)
