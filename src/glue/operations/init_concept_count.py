@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """ creates the achilles result table(s) which facilitate searching """
 import logging
+import re
 
 from ..config import GlueConfig
 from ..db.multidb import MultiDB
@@ -24,6 +25,9 @@ def run(config: GlueConfig, api: WebAPIClient):
     with MultiDB(*config.cdm_db_params()) as cdm_db:
         logger.info("starting")
         ddl = api.get_achilles_ddl()
+        # remove c-style comments which may currently contain strings that look
+        # like named param references
+        ddl = re.sub(r"/\*.+?\*/", "", ddl, flags=re.DOTALL)
         logger.info("got %s-byte sql blob from webapi. Executing...", len(ddl))
         cdm_db.execute(ddl)
     logger.info("enable_result_init: done")
