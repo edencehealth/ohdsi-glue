@@ -15,8 +15,7 @@ RUN set -eux; \
     strace \
     unixodbc-dev \
   ; \
-  pip install -r /requirements.txt; \
-  pip cache purge; \
+  pip install --no-cache-dir -r /requirements.txt; \
   $AG purge \
     build-essential \
     python-dev \
