@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" implementation of class for working with postgres and mssql databases """
+"""implementation of class for working with postgres and mssql databases"""
+
 # pylint: disable=R0913
 import contextlib
 import functools
@@ -89,6 +90,10 @@ class MultiDB(contextlib.AbstractContextManager):
             self.cnxn = mssql_connect(
                 server=server, user=user, password=password, database=database
             )
+            # attempt to change the default database on the connection, this
+            # should already be handled by mssql_connect but it may not be
+            # working
+            self.execute("use {ID_database}", ID_database=database)
         elif dialect == "postgresql":
             self.cnxn = pg_connect(
                 server=server, user=user, password=password, database=database
