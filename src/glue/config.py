@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-""" module for capturing the app configuration """
+"""module for capturing the app configuration"""
+
 # pylint: disable=too-few-public-methods
 from typing import Optional
 

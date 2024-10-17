@@ -1,4 +1,4 @@
-""" sets up default a console logger and file logging for the app """
+"""sets up default a console logger and file logging for the app"""
 
 import logging
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" ohdsi_glue entrypoint """
+"""ohdsi_glue entrypoint"""
+
 import os
 from typing import Final
 

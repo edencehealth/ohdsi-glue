@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" microsoft sql server related functions """
+"""microsoft sql server related functions"""
+
 import logging
 from typing import Any
 

@@ -4,7 +4,7 @@ default_language_version:
   python: python3.11
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -22,7 +22,7 @@ repos:
           - --branch
           - main
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.1
+    rev: v1.7.3
     hooks:
       - id: actionlint-docker
         name: check github workflows with actionlint
@@ -30,49 +30,24 @@ repos:
     rev: v0.10.0
     hooks:
       - id: shellcheck
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
-    hooks:
-      - id: black
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args:
-          - "--profile"
-          - "black"
-          - "--filter-files"
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.9
+    rev: 1.7.10
     hooks:
       - id: bandit
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
     hooks:
-      - id: flake8
-        args:
-          - "--max-line-length"
-          - "88"
-          - "--extend-ignore"
-          - "E203,E501"
-  - repo: local
-    hooks:
-      - id: pylint
-        name: pylint
-        entry: pylint
-        language: system
-        types: [python]
-        args:
-          - "-rn" # Only display messages
-          - "-sn" # Don't display the score
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.0
+    rev: v1.12.0
     hooks:
       - id: mypy
         additional_dependencies:
          - types-requests
   - repo: https://github.com/jendrikseipp/vulture
-    rev: v2.11
+    rev: v2.13
     hooks:
       - id: vulture
   - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
@@ -81,6 +56,6 @@ repos:
       - id: python-safety-dependencies-check
         files: "requirements.txt"
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.13.0-beta
+    rev: v2.13.1-beta
     hooks:
       - id: hadolint-docker

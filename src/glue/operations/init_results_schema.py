@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" create the results schema in the CDM DB """
+"""create the results schema in the CDM DB"""
+
 import logging
 
 from ..config import GlueConfig

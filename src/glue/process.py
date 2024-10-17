@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" primary functionality for gluing various ohdsi bits together """
+"""primary functionality for gluing various ohdsi bits together"""
+
 # pylint: disable=R0913
 import logging
 from typing import Any
