@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """create the Common Evidence Model results schema in the CDM DB"""
+
 import logging
 
 from ..config import GlueConfig

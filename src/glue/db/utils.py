@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" utils for setting up the target database and populating some tables """
+"""utils for setting up the target database and populating some tables"""
+
 from __future__ import annotations
 
 import logging

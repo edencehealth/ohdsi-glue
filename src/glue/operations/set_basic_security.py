@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" setup / update the basic security database in the security db """
+"""setup / update the basic security database in the security db"""
+
 import logging
 from typing import Set
 

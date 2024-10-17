@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" creates the achilles result table(s) which facilitate searching """
+"""creates the achilles result table(s) which facilitate searching"""
+
 import logging
 
 from ..config import GlueConfig

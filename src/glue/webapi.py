@@ -1,5 +1,6 @@
 #!/usr/bin/env/python3
-""" interactions with OHDSI WebAPI, over its web API """
+"""interactions with OHDSI WebAPI, over its web API"""
+
 # pylint: disable=R0903
 import logging
 from typing import Any, Dict, Optional, Union
