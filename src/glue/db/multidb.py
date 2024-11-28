@@ -9,7 +9,6 @@ import re
 import string
 from importlib import resources
 from typing import Any, Dict, Final, List, NamedTuple, Tuple
-
 from .mssql import connect as mssql_connect
 from .postgres import connect as pg_connect
 
@@ -86,6 +85,9 @@ class MultiDB(contextlib.AbstractContextManager):
         password: str,
         database: str,
     ):
+        self.dialect = dialect
+        self.server = server
+        self.database = database
         if dialect == "sql server":
             self.cnxn = mssql_connect(
                 server=server, user=user, password=password, database=database
@@ -100,9 +102,6 @@ class MultiDB(contextlib.AbstractContextManager):
             )
         else:
             raise RuntimeError("Unrecognized database dialect: " + dialect)
-        self.dialect = dialect
-        self.server = server
-        self.database = database
 
     def __exit__(self, *args, **kwargs):
         """close the database connection"""
@@ -142,7 +141,6 @@ class MultiDB(contextlib.AbstractContextManager):
                     )
                 safe_values[param] = param_value
                 del params[param]
-
         if self.dialect == "sql server":
             formatter = KeyFormatter(":{}", **safe_values)
         elif self.dialect == "postgresql":
@@ -160,6 +158,7 @@ class MultiDB(contextlib.AbstractContextManager):
         ...rather than [["Rocinante"], ["Enterprise"], ["Orion III"]]
         """
         with self.cnxn.cursor() as cursor:
+            logger.debug(self.dialect)
             final_query, filtered_params = self.query(sql, **params)
             logger.debug(
                 "get_column: sending query (with %s-params): %s",

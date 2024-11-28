@@ -14,4 +14,5 @@ def connect(*args, **kwargs) -> Any:
     wrapper around ctds.connect that ensures paramstyle="named"
     """
     kwargs["paramstyle"] = "named"
+    kwargs["timeout"] = 3600
     return ctds.connect(*args, **kwargs)
