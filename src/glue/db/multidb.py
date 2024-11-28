@@ -158,7 +158,6 @@ class MultiDB(contextlib.AbstractContextManager):
         ...rather than [["Rocinante"], ["Enterprise"], ["Orion III"]]
         """
         with self.cnxn.cursor() as cursor:
-            logger.debug(self.dialect)
             final_query, filtered_params = self.query(sql, **params)
             logger.debug(
                 "get_column: sending query (with %s-params): %s",
