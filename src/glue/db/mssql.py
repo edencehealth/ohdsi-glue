@@ -14,4 +14,5 @@ def connect(*args, **kwargs) -> Any:
     wrapper around ctds.connect that ensures paramstyle="named"
     """
     kwargs["paramstyle"] = "named"
+    # https://zillow.github.io/ctds/ctds.html#ctds.connect
     return ctds.connect(*args, **kwargs)

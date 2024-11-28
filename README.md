@@ -4,8 +4,8 @@ OHDSI Glue is a container designed specifically to facilitate the setup and ongo
 
 ## usage
 
-* GitHub Repo: <https://github.com/edencehealth/ohdsi-glue>
-* Docker Hub Repo: <https://hub.docker.com/r/edence/ohdsi-glue>
+- GitHub Repo: <https://github.com/edencehealth/ohdsi-glue>
+- Docker Hub Repo: <https://hub.docker.com/r/edence/ohdsi-glue>
 
 The container produces the following help text when invoked with the `-h` or `--help` arguments:
 
@@ -41,7 +41,7 @@ usage: glue [-h] [--version] [--log-level {DEBUG,INFO,WARNING,ERROR}]
             [--enable-source-setup | --no-enable-source-setup]
             [--enable-basic-security | --no-enable-basic-security]
             [--update-passwords | --no-update-passwords]
-            [--bulk-user-file BULK_USER_FILE]
+            [--bulk-user-file BULK_USER_FILE] [--mssql-timeout MSSQL_TIMEOUT]
 
 Utility for working with OHDSI WebAPI and related apps
 
@@ -179,12 +179,16 @@ options:
                         these headings:
                         username,password,firstname,middlename,lastname
                         (default: None)
+  --mssql-timeout MSSQL_TIMEOUT
+                        timeout for MS SQL Server database requests, in
+                        seconds (default: 3600)
+
 ```
 
 ## resources
 
-* [WebAPI CDM configuration docs](https://github.com/OHDSI/WebAPI/wiki/CDM-Configuration) - documentation for most of the tasks we're trying to accomplish
-* [WebAPI git trunk's pom.xml](https://github.com/OHDSI/WebAPI/blob/master/pom.xml) - useful resource to find settings that need setting
-* [cTDS documentation](https://zillow.github.io/ctds/index.html) - docs for our SQL Server database library
-* [psycopg documentation](https://www.psycopg.org/docs/index.html) - docs for our PostgreSQL database library
-* [PEP 249 -- Python Database API Specification v2.0](https://www.python.org/dev/peps/pep-0249/)
+- [WebAPI CDM configuration docs](https://github.com/OHDSI/WebAPI/wiki/CDM-Configuration) - documentation for most of the tasks we're trying to accomplish
+- [WebAPI git trunk's pom.xml](https://github.com/OHDSI/WebAPI/blob/master/pom.xml) - useful resource to find settings that need setting
+- [cTDS documentation](https://zillow.github.io/ctds/index.html) - docs for our SQL Server database library
+- [psycopg documentation](https://www.psycopg.org/docs/index.html) - docs for our PostgreSQL database library
+- [PEP 249 -- Python Database API Specification v2.0](https://www.python.org/dev/peps/pep-0249/)

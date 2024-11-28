@@ -19,7 +19,7 @@ def run(config: GlueConfig, api: WebAPIClient):
     logger.info("connecting to app database")
     if api.version is None:
         raise RuntimeError("api.version is required for this operation")
-    with MultiDB(*config.app_db_params()) as app_db:
+    with MultiDB(**config.app_db_params()) as app_db:
         logger.info("creating webapi source/source_daimon entries in app database...")
         ensure_webapi_source(config, app_db, api.version)
         ensure_webapi_source_daimons(config, app_db)
