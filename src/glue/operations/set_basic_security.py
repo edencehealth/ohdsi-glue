@@ -26,7 +26,7 @@ def run(config: GlueConfig):
     # communicate with webapi using bearer auth
     admins: Set[str] = set((config.atlas_username,))
     logger.info("connecting to security database")
-    with MultiDB(*config.security_db_params()) as security_db:
+    with MultiDB(**config.security_db_params()) as security_db:
         logger.info("ensuring the basic security schema is setup")
 
         # ensure the schema exists
@@ -72,7 +72,7 @@ def run(config: GlueConfig):
     _ = WebAPIClient(config)
 
     # now augment those entries...
-    with MultiDB(*config.app_db_params()) as app_db:
+    with MultiDB(**config.app_db_params()) as app_db:
         for username in admins:
             logger.debug("ensuring admin role for %s", username)
             ensure_admin_role(config, app_db, username)

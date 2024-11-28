@@ -9,6 +9,7 @@ import re
 import string
 from importlib import resources
 from typing import Any, Dict, Final, List, NamedTuple, Tuple
+
 from .mssql import connect as mssql_connect
 from .postgres import connect as pg_connect
 
@@ -84,13 +85,18 @@ class MultiDB(contextlib.AbstractContextManager):
         user: str,
         password: str,
         database: str,
+        mssql_timeout: int = 5,
     ):
         self.dialect = dialect
         self.server = server
         self.database = database
         if dialect == "sql server":
             self.cnxn = mssql_connect(
-                server=server, user=user, password=password, database=database
+                server=server,
+                user=user,
+                password=password,
+                database=database,
+                timeout=mssql_timeout,
             )
             # attempt to change the default database on the connection, this
             # should already be handled by mssql_connect but it may not be

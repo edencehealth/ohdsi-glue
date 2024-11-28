@@ -2,7 +2,7 @@
 """module for capturing the app configuration"""
 
 # pylint: disable=too-few-public-methods
-from typing import Optional
+from typing import Optional, TypedDict
 
 from basecfg import BaseCfg, opt
 
@@ -264,32 +264,51 @@ class GlueConfig(BaseCfg):
         + ",".join(BasicSecurityUserBulkEntry._fields),
     )
 
-    def app_db_params(self) -> tuple[str, str, str, str, str]:
+    mssql_timeout: int = opt(
+        default=3600,
+        doc="timeout for MS SQL Server database requests, in seconds",
+    )
+
+    # helper functions
+    class MultiDBArgDict(TypedDict):
+        """convenience container for MultiDB arguments"""
+
+        dialect: str
+        server: str
+        user: str
+        password: str
+        database: str
+        mssql_timeout: int
+
+    def app_db_params(self) -> MultiDBArgDict:
         """returns the connection parameters associated with the app db"""
-        return (
-            self.db_dialect,
-            self.db_server,
-            self.db_username,
-            self.db_password,
-            self.db_database,
-        )
+        return {
+            "dialect": self.db_dialect,
+            "server": self.db_server,
+            "user": self.db_username,
+            "password": self.db_password,
+            "database": self.db_database,
+            "mssql_timeout": self.mssql_timeout,
+        }
 
-    def cdm_db_params(self) -> tuple[str, str, str, str, str]:
+    def cdm_db_params(self) -> MultiDBArgDict:
         """returns the connection parameters associated with the cdm db"""
-        return (
-            self.cdm_db_dialect,
-            self.cdm_db_server,
-            self.cdm_db_username,
-            self.cdm_db_password,
-            self.cdm_db_database,
-        )
+        return {
+            "dialect": self.cdm_db_dialect,
+            "server": self.cdm_db_server,
+            "user": self.cdm_db_username,
+            "password": self.cdm_db_password,
+            "database": self.cdm_db_database,
+            "mssql_timeout": self.mssql_timeout,
+        }
 
-    def security_db_params(self) -> tuple[str, str, str, str, str]:
+    def security_db_params(self) -> MultiDBArgDict:
         """returns the connection parameters associated with the security db"""
-        return (
-            self.security_db_dialect,
-            self.security_db_server,
-            self.security_db_username,
-            self.security_db_password,
-            self.security_db_database,
-        )
+        return {
+            "dialect": self.security_db_dialect,
+            "server": self.security_db_server,
+            "user": self.security_db_username,
+            "password": self.security_db_password,
+            "database": self.security_db_database,
+            "mssql_timeout": self.mssql_timeout,
+        }
