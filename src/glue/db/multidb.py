@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" implementation of class for working with postgres and mssql databases """
+"""implementation of class for working with postgres and mssql databases"""
+
 # pylint: disable=R0913
 import contextlib
 import functools
@@ -84,20 +85,29 @@ class MultiDB(contextlib.AbstractContextManager):
         user: str,
         password: str,
         database: str,
+        mssql_timeout: int = 5,
     ):
+        self.dialect = dialect
+        self.server = server
+        self.database = database
         if dialect == "sql server":
             self.cnxn = mssql_connect(
-                server=server, user=user, password=password, database=database
+                server=server,
+                user=user,
+                password=password,
+                database=database,
+                timeout=mssql_timeout,
             )
+            # attempt to change the default database on the connection, this
+            # should already be handled by mssql_connect but it may not be
+            # working
+            self.execute("use {ID_database}", ID_database=database)
         elif dialect == "postgresql":
             self.cnxn = pg_connect(
                 server=server, user=user, password=password, database=database
             )
         else:
             raise RuntimeError("Unrecognized database dialect: " + dialect)
-        self.dialect = dialect
-        self.server = server
-        self.database = database
 
     def __exit__(self, *args, **kwargs):
         """close the database connection"""
@@ -137,7 +147,6 @@ class MultiDB(contextlib.AbstractContextManager):
                     )
                 safe_values[param] = param_value
                 del params[param]
-
         if self.dialect == "sql server":
             formatter = KeyFormatter(":{}", **safe_values)
         elif self.dialect == "postgresql":

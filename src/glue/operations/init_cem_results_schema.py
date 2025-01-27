@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """create the Common Evidence Model results schema in the CDM DB"""
+
 import logging
 
 from ..config import GlueConfig
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 def run(config: GlueConfig, api: WebAPIClient):
     """create the Common Evidence Model results schema in the CDM DB"""
     logger.info("connecting to CDM database")
-    with MultiDB(*config.cdm_db_params()) as cdm_db:
+    with MultiDB(**config.cdm_db_params()) as cdm_db:
         logger.info("starting")
         # ensure the schema exists
         ensure_schema(cdm_db, config.cem_schema)

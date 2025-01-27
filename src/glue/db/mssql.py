@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" microsoft sql server related functions """
+"""microsoft sql server related functions"""
+
 import logging
 from typing import Any
 
@@ -13,4 +14,5 @@ def connect(*args, **kwargs) -> Any:
     wrapper around ctds.connect that ensures paramstyle="named"
     """
     kwargs["paramstyle"] = "named"
+    # https://zillow.github.io/ctds/ctds.html#ctds.connect
     return ctds.connect(*args, **kwargs)

@@ -1,4 +1,5 @@
 """misc security-related utils"""
+
 import bcrypt
 
 

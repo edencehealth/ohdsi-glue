@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" creates the achilles result table(s) which facilitate searching """
+"""creates the achilles result table(s) which facilitate searching"""
+
 import logging
 import re
 
@@ -22,7 +23,7 @@ def run(config: GlueConfig, api: WebAPIClient):
         logger.info("skipping for webapi version < 2.13: %s", api.version)
         return
     logger.info("connecting to CDM database")
-    with MultiDB(*config.cdm_db_params()) as cdm_db:
+    with MultiDB(**config.cdm_db_params()) as cdm_db:
         logger.info("starting")
         ddl = api.get_achilles_ddl()
         # remove c-style comments which may currently contain strings that look

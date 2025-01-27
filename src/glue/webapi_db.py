@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" classes and functions for manipulating the WebAPI appdb directly """
+"""classes and functions for manipulating the WebAPI appdb directly"""
+
 # pylint: disable=R0913
 import logging
 import re

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" models used to contain data"""
+"""models used to contain data"""
+
 from typing import NamedTuple, Type, TypeVar
 
 T = TypeVar("T")

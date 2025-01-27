@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-""" postgres-related functions """
+"""postgres-related functions"""
+
 import re
 from typing import Any, Optional
 

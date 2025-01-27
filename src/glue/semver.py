@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """utils for dealing with Semantic Versioning strings"""
+
 # pylint: disable=too-many-return-statements
 import functools
 import re
