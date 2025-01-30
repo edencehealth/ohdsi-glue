@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM edence/pyodbcbase:latest
 LABEL maintainer="edenceHealth <info@edence.health>"
 
 COPY requirements.txt /
@@ -15,7 +15,7 @@ RUN set -eux; \
     strace \
     unixodbc-dev \
   ; \
-  pip install --no-cache-dir -r /requirements.txt; \
+  pip install --no-cache-dir --break-system-packages -r /requirements.txt; \
   $AG purge \
     build-essential \
     python-dev \
@@ -32,22 +32,8 @@ ARG VOCABULARY_DIR
 ENV LOG_DIR=${LOG_DIR:-/logs} \
   INPUT_DIR=${VOCABULARY_DIR:-/input}
 
-# create a non-root account for the code to run with
-ARG NONROOT_UID=65532
-ARG NONROOT_GID=65532
+# create input and log dir and give nonroot user access
 RUN set -eux; \
-  groupadd --gid "${NONROOT_GID}" "nonroot"; \
-  useradd \
-    --no-log-init \
-    --base-dir / \
-    --home-dir "/home/user" \
-    --create-home \
-    --shell "/bin/bash" \
-    --uid "${NONROOT_UID}" \
-    --gid "${NONROOT_GID}" \
-    "nonroot" \
-  ; \
-  passwd --lock "nonroot"; \
   mkdir -p "$INPUT_DIR" "$LOG_DIR"; \
   chown nonroot:nonroot "$INPUT_DIR" "$LOG_DIR";
 
@@ -62,4 +48,4 @@ ENV PYTHONPATH="/app"
 WORKDIR /work
 
 USER nonroot
-ENTRYPOINT ["/usr/local/bin/python3", "-m", "glue"]
+ENTRYPOINT ["/usr/bin/python", "-m", "glue"]
