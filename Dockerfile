@@ -1,4 +1,4 @@
-FROM edence/pyodbcbase:latest
+FROM edence/pyodbcbase:main
 LABEL maintainer="edenceHealth <info@edence.health>"
 
 COPY requirements.txt /

@@ -283,6 +283,7 @@ class GlueConfig(BaseCfg):
         password: str
         database: str
         mssql_timeout: int
+        driver: str
 
     def app_db_params(self) -> MultiDBArgDict:
         """returns the connection parameters associated with the app db"""
