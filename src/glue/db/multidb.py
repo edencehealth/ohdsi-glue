@@ -10,6 +10,8 @@ import string
 from importlib import resources
 from typing import Any, Dict, Final, List, NamedTuple, Tuple
 
+import sqlparams
+
 from .mssql import connect as mssql_connect
 from .postgres import connect as pg_connect
 
@@ -85,6 +87,7 @@ class MultiDB(contextlib.AbstractContextManager):
         user: str,
         password: str,
         database: str,
+        driver: str,
         mssql_timeout: int = 5,
     ):
         self.dialect = dialect
@@ -92,11 +95,13 @@ class MultiDB(contextlib.AbstractContextManager):
         self.database = database
         if dialect == "sql server":
             self.cnxn = mssql_connect(
-                server=server,
-                user=user,
-                password=password,
-                database=database,
+                DRIVER=driver,
+                SERVER=server,
+                UID=user,
+                PWD=password,
+                DATABASE=database,
                 timeout=mssql_timeout,
+                TrustServerCertificate="yes",
             )
             # attempt to change the default database on the connection, this
             # should already be handled by mssql_connect but it may not be
@@ -154,7 +159,11 @@ class MultiDB(contextlib.AbstractContextManager):
         else:
             raise RuntimeError("Unrecognized database dialect: " + self.dialect)
 
-        return string.Formatter().vformat(query, [], formatter), params
+        formatted_query = string.Formatter().vformat(query, [], formatter)
+        if self.dialect == "sql server":
+            p_query = sqlparams.SQLParams("named", "qmark")
+            formatted_query, params = p_query.format(formatted_query, params)
+        return formatted_query, params
 
     def get_column(self, sql: str, **params) -> List[Any]:
         """
@@ -171,7 +180,7 @@ class MultiDB(contextlib.AbstractContextManager):
                 final_query,
             )
             cursor.execute(final_query, filtered_params)
-            self.cnxn.commit()
+            # self.cnxn.commit()
             columns = len(cursor.description)
             rows = cursor.fetchall()
 
@@ -204,6 +213,7 @@ class MultiDB(contextlib.AbstractContextManager):
 
     def execute(self, sql: str, **params) -> None:
         """executes the given sql query on the given connection"""
+        logger.debug(params)
         with self.cnxn.cursor() as cursor:
             final_query, filtered_params = self.query(sql, **params)
             logger.debug(

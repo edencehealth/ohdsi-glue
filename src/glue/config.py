@@ -98,6 +98,10 @@ class GlueConfig(BaseCfg):
         doc="name of of the OMOP CDM database to connect to WebAPI",
     )
 
+    cdm_db_driver: str = opt(
+        default="{ODBC Driver 18 for SQL Server}", doc="ODBC driver"
+    )
+
     security_db_dialect: str = opt(
         default="postgresql",
         doc="sql database dialect of the WebAPI basic security database",
@@ -289,6 +293,7 @@ class GlueConfig(BaseCfg):
             "password": self.db_password,
             "database": self.db_database,
             "mssql_timeout": self.mssql_timeout,
+            "driver": self.cdm_db_driver,
         }
 
     def cdm_db_params(self) -> MultiDBArgDict:
@@ -300,6 +305,7 @@ class GlueConfig(BaseCfg):
             "password": self.cdm_db_password,
             "database": self.cdm_db_database,
             "mssql_timeout": self.mssql_timeout,
+            "driver": self.cdm_db_driver,
         }
 
     def security_db_params(self) -> MultiDBArgDict:
@@ -311,4 +317,5 @@ class GlueConfig(BaseCfg):
             "password": self.security_db_password,
             "database": self.security_db_database,
             "mssql_timeout": self.mssql_timeout,
+            "driver": self.cdm_db_driver,
         }

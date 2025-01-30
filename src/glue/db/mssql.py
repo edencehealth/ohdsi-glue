@@ -4,15 +4,14 @@
 import logging
 from typing import Any
 
-import ctds
+import pyodbc
 
 logger = logging.getLogger(__name__)
 
 
 def connect(*args, **kwargs) -> Any:
     """
-    wrapper around ctds.connect that ensures paramstyle="named"
+    wrapper around pyodbc.connect that ensures paramstyle="named"
     """
-    kwargs["paramstyle"] = "named"
-    # https://zillow.github.io/ctds/ctds.html#ctds.connect
-    return ctds.connect(*args, **kwargs)
+    # https://github.com/mkleehammer/pyodbc/wiki/The-pyodbc-Module#connect
+    return pyodbc.connect(*args, **kwargs)
