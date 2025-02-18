@@ -10,10 +10,7 @@ RUN set -eux; \
   $AG upgrade; \
   $AG install \
     build-essential \
-    freetds-dev \
     python3-dev \
-    strace \
-    unixodbc-dev \
   ; \
   pip install --no-cache-dir --break-system-packages -r /requirements.txt; \
   $AG purge \
