@@ -87,29 +87,33 @@ class MultiDB(contextlib.AbstractContextManager):
         user: str,
         password: str,
         database: str,
-        driver: str,
-        mssql_timeout: int = 5,
+        timeout: int = 5,
     ):
         self.dialect = dialect
         self.server = server
         self.database = database
+
+        # fixme: consider passing-in a config instance or otherwise getting the
+        # settings directly to the connect helper functions
+        # things like extra settings, encryption, tls trust settings, and more
+        #
+        # we don't want want to have to pass a zillion args to MultiDB's constructor
+        # everytime we use it
         if dialect == "sql server":
             self.cnxn = mssql_connect(
-                DRIVER=driver,
-                SERVER=server,
-                UID=user,
-                PWD=password,
-                DATABASE=database,
-                timeout=mssql_timeout,
-                TrustServerCertificate="yes",
+                server=server,
+                user=user,
+                password=password,
+                database=database,
+                timeout=timeout,
             )
-            # attempt to change the default database on the connection, this
-            # should already be handled by mssql_connect but it may not be
-            # working
-            self.execute("use {ID_database}", ID_database=database)
         elif dialect == "postgresql":
+            # fixme: implement timeout setting, autocommit setting
             self.cnxn = pg_connect(
-                server=server, user=user, password=password, database=database
+                server=server,
+                user=user,
+                password=password,
+                database=database,
             )
         else:
             raise RuntimeError("Unrecognized database dialect: " + dialect)
