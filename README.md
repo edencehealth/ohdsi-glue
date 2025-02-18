@@ -41,7 +41,7 @@ usage: glue [-h] [--version] [--log-level {DEBUG,INFO,WARNING,ERROR}]
             [--enable-source-setup | --no-enable-source-setup]
             [--enable-basic-security | --no-enable-basic-security]
             [--update-passwords | --no-update-passwords]
-            [--bulk-user-file BULK_USER_FILE] [--mssql-timeout MSSQL_TIMEOUT]
+            [--bulk-user-file BULK_USER_FILE] [--db-timeout DB_TIMEOUT]
 
 Utility for working with OHDSI WebAPI and related apps
 
@@ -179,9 +179,9 @@ options:
                         these headings:
                         username,password,firstname,middlename,lastname
                         (default: None)
-  --mssql-timeout MSSQL_TIMEOUT
-                        timeout for MS SQL Server database requests, in
-                        seconds (default: 3600)
+  --db-timeout DB_TIMEOUT
+                        timeout for database requests, in seconds (default:
+                        3600)
 
 ```
 
