@@ -2,12 +2,12 @@
 """postgres-related functions"""
 
 import re
-from typing import Any, Optional
+from typing import Optional
 
 import psycopg2
 
 
-def connect(server: str, user: str, password: str, database: str) -> Any:
+def connect(server: str, user: str, password: str, database: str):
     """adapt psycopg2.connect to the 'host:port'-style server param"""
     port: Optional[int]
     if ":" in server:
