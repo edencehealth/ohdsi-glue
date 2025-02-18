@@ -2,11 +2,16 @@
 """module for capturing the app configuration"""
 
 # pylint: disable=too-few-public-methods
-from typing import Optional, TypedDict
+from typing import Final, Optional, TypedDict
 
 from basecfg import BaseCfg, opt
 
 from .models import BasicSecurityUserBulkEntry
+
+supported_db_dialects: Final = (
+    "postgresql",
+    "sql server",
+)
 
 
 class GlueConfig(BaseCfg):
@@ -49,7 +54,7 @@ class GlueConfig(BaseCfg):
     db_dialect: str = opt(
         default="postgresql",
         doc="the sql database dialect",
-        choices=["postgresql", "sql server"],
+        choices=supported_db_dialects,
     )
 
     db_server: str = opt(
@@ -75,7 +80,7 @@ class GlueConfig(BaseCfg):
     cdm_db_dialect: str = opt(
         default="postgresql",
         doc="sql database dialect of the OMOP CDM database to connect to WebAPI",
-        choices=["postgresql", "sql server"],
+        choices=supported_db_dialects,
     )
 
     cdm_db_server: str = opt(
@@ -98,14 +103,10 @@ class GlueConfig(BaseCfg):
         doc="name of of the OMOP CDM database to connect to WebAPI",
     )
 
-    cdm_db_driver: str = opt(
-        default="{ODBC Driver 18 for SQL Server}", doc="ODBC driver"
-    )
-
     security_db_dialect: str = opt(
         default="postgresql",
         doc="sql database dialect of the WebAPI basic security database",
-        choices=["postgresql", "sql server"],
+        choices=supported_db_dialects,
     )
 
     security_db_server: str = opt(
@@ -157,8 +158,7 @@ class GlueConfig(BaseCfg):
     ohdsi_schema: str = opt(
         default="ohdsi",
         doc=(
-            "the schema used by webapi to manage its own configuration and other "
-            "state"
+            "the schema used by webapi to manage its own configuration and other state"
         ),
     )
 
@@ -194,9 +194,7 @@ class GlueConfig(BaseCfg):
 
     source_name: str = opt(
         default="My Cdm",
-        doc=(
-            "the name of the data source, used by webapi to refer to the data " "source"
-        ),
+        doc=("the name of the data source, used by webapi to refer to the data source"),
     )
 
     source_cache: bool = opt(
@@ -268,9 +266,9 @@ class GlueConfig(BaseCfg):
         + ",".join(BasicSecurityUserBulkEntry._fields),
     )
 
-    mssql_timeout: int = opt(
+    db_timeout: int = opt(
         default=3600,
-        doc="timeout for MS SQL Server database requests, in seconds",
+        doc="timeout for database requests, in seconds",
     )
 
     # helper functions
@@ -282,8 +280,6 @@ class GlueConfig(BaseCfg):
         user: str
         password: str
         database: str
-        mssql_timeout: int
-        driver: str
 
     def app_db_params(self) -> MultiDBArgDict:
         """returns the connection parameters associated with the app db"""
@@ -293,8 +289,6 @@ class GlueConfig(BaseCfg):
             "user": self.db_username,
             "password": self.db_password,
             "database": self.db_database,
-            "mssql_timeout": self.mssql_timeout,
-            "driver": self.cdm_db_driver,
         }
 
     def cdm_db_params(self) -> MultiDBArgDict:
@@ -305,8 +299,6 @@ class GlueConfig(BaseCfg):
             "user": self.cdm_db_username,
             "password": self.cdm_db_password,
             "database": self.cdm_db_database,
-            "mssql_timeout": self.mssql_timeout,
-            "driver": self.cdm_db_driver,
         }
 
     def security_db_params(self) -> MultiDBArgDict:
@@ -317,6 +309,4 @@ class GlueConfig(BaseCfg):
             "user": self.security_db_username,
             "password": self.security_db_password,
             "database": self.security_db_database,
-            "mssql_timeout": self.mssql_timeout,
-            "driver": self.cdm_db_driver,
         }
