@@ -217,7 +217,6 @@ class MultiDB(contextlib.AbstractContextManager):
 
     def execute(self, sql: str, **params) -> None:
         """executes the given sql query on the given connection"""
-        logger.debug(params)
         with self.cnxn.cursor() as cursor:
             final_query, filtered_params = self.query(sql, **params)
             logger.debug(
