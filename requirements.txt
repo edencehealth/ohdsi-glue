@@ -1,7 +1,7 @@
 basecfg~=2.1.1
-baselog~=2.0.1
-bcrypt~=4.2.0
-pyodbc~=5.2.0
+baselog~=2.1.0
+bcrypt~=4.2.1
 psycopg2-binary~=2.9.10
+pyodbc>=5 # this is installed by the base docker image
 requests~=2.32.3
-sqlparams
+sqlparams~=6.2.0
