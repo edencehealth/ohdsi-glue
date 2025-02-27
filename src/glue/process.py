@@ -8,6 +8,7 @@ from typing import Any
 from . import webapi
 from .config import GlueConfig
 from .operations import (
+    flush_atlas_cache,
     init_cem_results_schema,
     init_concept_count,
     init_results_schema,
@@ -39,5 +40,8 @@ def glue_it(config: GlueConfig) -> Any:
 
     if config.enable_source_setup:
         init_sources.run(config, api)
+
+    if config.enable_flush_webapi_caches:
+        flush_atlas_cache.run(config, api)
 
     logger.info("done")

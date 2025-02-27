@@ -153,8 +153,7 @@ class GlueConfig(BaseCfg):
     ohdsi_schema: str = opt(
         default="ohdsi",
         doc=(
-            "the schema used by webapi to manage its own configuration and other "
-            "state"
+            "the schema used by webapi to manage its own configuration and other state"
         ),
     )
 
@@ -190,9 +189,7 @@ class GlueConfig(BaseCfg):
 
     source_name: str = opt(
         default="My Cdm",
-        doc=(
-            "the name of the data source, used by webapi to refer to the data " "source"
-        ),
+        doc=("the name of the data source, used by webapi to refer to the data source"),
     )
 
     source_cache: bool = opt(
@@ -221,6 +218,15 @@ class GlueConfig(BaseCfg):
             "https://github.com/OHDSI/WebAPI/wiki/CDM-Configuration"
             "#concept-count-tables)"
             "NOTE: this assumes you have already run achilles"
+        ),
+    )
+
+    enable_flush_webapi_caches: bool = opt(
+        default=True,
+        doc=(
+            "enables flushing the WebAPI DB's achilles_cache and cdm_cache tables; "
+            "this can work around problems of missing domain tables or problems "
+            "seeing updated data in Atlas"
         ),
     )
 
