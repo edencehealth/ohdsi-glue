@@ -14,6 +14,7 @@ import sqlparams
 
 from .mssql import connect as mssql_connect
 from .postgres import connect as pg_connect
+from .oracle import connect as oracle_connect
 
 sql_dir = resources.files("glue.sql")
 logger = logging.getLogger(__name__)
@@ -99,24 +100,34 @@ class MultiDB(contextlib.AbstractContextManager):
         #
         # we don't want want to have to pass a zillion args to MultiDB's constructor
         # everytime we use it
-        if dialect == "sql server":
-            self.cnxn = mssql_connect(
-                server=server,
-                user=user,
-                password=password,
-                database=database,
-                timeout=timeout,
-            )
-        elif dialect == "postgresql":
-            # fixme: implement timeout setting, autocommit setting
-            self.cnxn = pg_connect(
-                server=server,
-                user=user,
-                password=password,
-                database=database,
-            )
-        else:
-            raise RuntimeError("Unrecognized database dialect: " + dialect)
+
+        match dialect:
+            case "sql server":
+                self.cnxn = mssql_connect(
+                    server=server,
+                    user=user,
+                    password=password,
+                    database=database,
+                    timeout=timeout,
+                )
+            case "postgresql":
+                # fixme: implement timeout setting, autocommit setting
+                self.cnxn = pg_connect(
+                    server=server,
+                    user=user,
+                    password=password,
+                    database=database,
+                )
+            case "oracle":
+                self.cnxn = oracle_connect(
+                    server=server,
+                    user=user,
+                    password=password,
+                    database=database,
+                    timeout=timeout,
+                )
+            case _:
+                raise RuntimeError("Unrecognized database dialect: " + dialect)
 
     def __exit__(self, *args, **kwargs):
         """close the database connection"""
@@ -156,12 +167,16 @@ class MultiDB(contextlib.AbstractContextManager):
                     )
                 safe_values[param] = param_value
                 del params[param]
-        if self.dialect == "sql server":
-            formatter = KeyFormatter(":{}", **safe_values)
-        elif self.dialect == "postgresql":
-            formatter = KeyFormatter("%({})s", **safe_values)
-        else:
-            raise RuntimeError("Unrecognized database dialect: " + self.dialect)
+
+        match self.dialect:
+            case "oracle":
+                formatter = KeyFormatter(":{}", **safe_values)
+            case "sql server":
+                formatter = KeyFormatter(":{}", **safe_values)
+            case "postgresql":
+                formatter = KeyFormatter("%({})s", **safe_values)
+            case _:
+                raise RuntimeError("Unrecognized database dialect: " + self.dialect)
 
         formatted_query = string.Formatter().vformat(query, [], formatter)
         if self.dialect == "sql server":

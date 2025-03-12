@@ -9,6 +9,7 @@ from basecfg import BaseCfg, opt
 from .models import BasicSecurityUserBulkEntry
 
 supported_db_dialects: Final = (
+    "oracle",
     "postgresql",
     "sql server",
 )
