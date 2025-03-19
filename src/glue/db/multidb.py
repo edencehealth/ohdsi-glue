@@ -266,7 +266,11 @@ class MultiDB(contextlib.AbstractContextManager):
 
     def list_schemas(self) -> List[str]:
         """return a list of schemas in the database"""
-        return self.get_column(sqlfile("list_schemas.sql"))
+
+        if self.dialect == "oracle":
+            return self.get_column(sqlfile("list_schemas_oracle.sql").strip())
+        else:
+            return self.get_column(sqlfile("list_schemas.sql").strip())
 
     def list_tables(self, schema: str) -> List[str]:
         """return a list of tables in the given schema"""
