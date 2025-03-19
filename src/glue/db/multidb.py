@@ -186,7 +186,7 @@ class MultiDB(contextlib.AbstractContextManager):
                 p_query = sqlparams.SQLParams("named", "qmark")
                 formatted_query, params = p_query.format(formatted_query, params)
             case "oracle":
-                formatted_query.rstrip().rstrip(";")
+                formatted_query = formatted_query.rstrip().rstrip(";")
 
         return formatted_query, params
 
