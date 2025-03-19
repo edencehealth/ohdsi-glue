@@ -2,6 +2,7 @@
 .env
 .env.*
 .mypy_cache
+.python-version
 .venv
 .vscode
 __pycache__
