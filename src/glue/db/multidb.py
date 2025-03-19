@@ -179,9 +179,15 @@ class MultiDB(contextlib.AbstractContextManager):
                 raise RuntimeError("Unrecognized database dialect: " + self.dialect)
 
         formatted_query = string.Formatter().vformat(query, [], formatter)
-        if self.dialect == "sql server":
-            p_query = sqlparams.SQLParams("named", "qmark")
-            formatted_query, params = p_query.format(formatted_query, params)
+
+        # postprocessing
+        match self.dialect:
+            case "sql server":
+                p_query = sqlparams.SQLParams("named", "qmark")
+                formatted_query, params = p_query.format(formatted_query, params)
+            case "oracle":
+                formatted_query.rstrip("; ")
+
         return formatted_query, params
 
     def get_column(self, sql: str, **params) -> List[Any]:
@@ -268,9 +274,9 @@ class MultiDB(contextlib.AbstractContextManager):
         """return a list of schemas in the database"""
 
         if self.dialect == "oracle":
-            return self.get_column(sqlfile("list_schemas_oracle.sql").strip())
+            return self.get_column(sqlfile("list_schemas.sql"))
         else:
-            return self.get_column(sqlfile("list_schemas.sql").strip())
+            return self.get_column(sqlfile("list_schemas.sql"))
 
     def list_tables(self, schema: str) -> List[str]:
         """return a list of tables in the given schema"""
