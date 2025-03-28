@@ -2,7 +2,7 @@
 """module for capturing the app configuration"""
 
 # pylint: disable=too-few-public-methods
-from typing import Final, Optional, TypedDict
+from typing import Final, Optional, TypedDict, Literal
 
 from basecfg import BaseCfg, opt
 
@@ -271,6 +271,20 @@ class GlueConfig(BaseCfg):
         doc="timeout for database requests, in seconds",
     )
 
+    trust_server_certificate: Literal["yes", "no", "strict"] = opt(
+        default="yes",
+        choices=("yes", "no", "strict"),
+        doc=(
+            "how to handle SSL certificate trust when communicating with the server "
+            "(currently only implemented for mssql)"
+        ),
+    )
+
+    mssql_autocommit: bool = opt(
+        default=False,
+        doc="determines whether the autocommit pydodbc flag is enabled",
+    )
+
     # helper functions
     class MultiDBArgDict(TypedDict):
         """convenience container for MultiDB arguments"""
@@ -280,6 +294,7 @@ class GlueConfig(BaseCfg):
         user: str
         password: str
         database: str
+        config: "GlueConfig"
 
     def app_db_params(self) -> MultiDBArgDict:
         """returns the connection parameters associated with the app db"""
@@ -289,6 +304,7 @@ class GlueConfig(BaseCfg):
             "user": self.db_username,
             "password": self.db_password,
             "database": self.db_database,
+            "config": self,
         }
 
     def cdm_db_params(self) -> MultiDBArgDict:
@@ -299,6 +315,7 @@ class GlueConfig(BaseCfg):
             "user": self.cdm_db_username,
             "password": self.cdm_db_password,
             "database": self.cdm_db_database,
+            "config": self,
         }
 
     def security_db_params(self) -> MultiDBArgDict:
@@ -309,4 +326,5 @@ class GlueConfig(BaseCfg):
             "user": self.security_db_username,
             "password": self.security_db_password,
             "database": self.security_db_database,
+            "config": self,
         }
