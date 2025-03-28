@@ -8,12 +8,24 @@ import logging
 import re
 import string
 from importlib import resources
-from typing import Any, Dict, Final, List, NamedTuple, Tuple
+from typing import (
+    Any,
+    Dict,
+    Final,
+    List,
+    NamedTuple,
+    Tuple,
+    Callable,
+    TypeAlias,
+    Union,
+    Optional,
+)
 
 import sqlparams
 
-from .mssql import connect as mssql_connect
-from .postgres import connect as pg_connect
+from . import mssql
+from . import postgres
+from ..config import GlueConfig
 
 sql_dir = resources.files("glue.sql")
 logger = logging.getLogger(__name__)
@@ -21,6 +33,19 @@ logger = logging.getLogger(__name__)
 # note: if you change these you have to update table_info and list_tables
 identifier_prefix: Final = "ID_"
 literal_prefix: Final = "LIT_"
+
+DBConnection = Union[mssql.Connection, postgres.Connection]
+
+ConnectFunc: TypeAlias = Callable[
+    [
+        str,  # server
+        str,  # user
+        str,  # password
+        str,  # database
+        GlueConfig,
+    ],
+    DBConnection,
+]
 
 
 @functools.cache
@@ -87,7 +112,7 @@ class MultiDB(contextlib.AbstractContextManager):
         user: str,
         password: str,
         database: str,
-        timeout: int = 5,
+        config: GlueConfig,
     ):
         self.dialect = dialect
         self.server = server
@@ -99,24 +124,21 @@ class MultiDB(contextlib.AbstractContextManager):
         #
         # we don't want want to have to pass a zillion args to MultiDB's constructor
         # everytime we use it
-        if dialect == "sql server":
-            self.cnxn = mssql_connect(
-                server=server,
-                user=user,
-                password=password,
-                database=database,
-                timeout=timeout,
-            )
-        elif dialect == "postgresql":
-            # fixme: implement timeout setting, autocommit setting
-            self.cnxn = pg_connect(
-                server=server,
-                user=user,
-                password=password,
-                database=database,
-            )
-        else:
+        connect_func: Optional[ConnectFunc] = None
+        match dialect:
+            case "sql server":
+                connect_func = mssql.connect
+            case "postgresql":
+                connect_func = postgres.connect
+        if not connect_func:
             raise RuntimeError("Unrecognized database dialect: " + dialect)
+        self.cnxn = connect_func(
+            server,
+            user,
+            password,
+            database,
+            config,
+        )
 
     def __exit__(self, *args, **kwargs):
         """close the database connection"""
@@ -185,7 +207,9 @@ class MultiDB(contextlib.AbstractContextManager):
             )
             cursor.execute(final_query, filtered_params)
             # self.cnxn.commit()
-            columns = len(cursor.description)
+            columns = 0
+            if cursor.description and isinstance(cursor.description, tuple):
+                columns = len(cursor.description)
             rows = cursor.fetchall()
 
         if columns != 1:
