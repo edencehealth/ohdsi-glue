@@ -42,6 +42,8 @@ usage: glue [-h] [--version] [--log-level {DEBUG,INFO,WARNING,ERROR}]
             [--enable-basic-security | --no-enable-basic-security]
             [--update-passwords | --no-update-passwords]
             [--bulk-user-file BULK_USER_FILE] [--db-timeout DB_TIMEOUT]
+            [--trust-server-certificate {yes,no,strict}]
+            [--mssql-autocommit | --no-mssql-autocommit]
 
 Utility for working with OHDSI WebAPI and related apps
 
@@ -182,6 +184,13 @@ options:
   --db-timeout DB_TIMEOUT
                         timeout for database requests, in seconds (default:
                         3600)
+  --trust-server-certificate {yes,no,strict}
+                        how to handle SSL certificate trust when communicating
+                        with the server (currently only implemented for mssql)
+                        (default: 'yes')
+  --mssql-autocommit, --no-mssql-autocommit
+                        determines whether the autocommit pydodbc flag is
+                        enabled (default: False)
 
 ```
 
