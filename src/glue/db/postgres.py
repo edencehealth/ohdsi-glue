@@ -2,12 +2,23 @@
 """postgres-related functions"""
 
 import re
-from typing import Optional
+from typing import Optional, TypeAlias
 
 import psycopg2
+from psycopg2.extensions import connection as Psycopg2Connection
+
+from ..config import GlueConfig
+
+Connection: TypeAlias = Psycopg2Connection
 
 
-def connect(server: str, user: str, password: str, database: str):
+def connect(
+    server: str,
+    user: str,
+    password: str,
+    database: str,
+    config: GlueConfig,
+) -> Connection:
     """adapt psycopg2.connect to the 'host:port'-style server param"""
     port: Optional[int]
     if ":" in server:
@@ -24,5 +35,9 @@ def connect(server: str, user: str, password: str, database: str):
         port = None
 
     return psycopg2.connect(
-        host=host, port=port, user=user, password=password, dbname=database
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        dbname=database,
     )
