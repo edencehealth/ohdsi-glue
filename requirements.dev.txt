@@ -1,6 +1,6 @@
-bandit~=1.8.2
+bandit~=1.8.3
 mypy~=1.15.0
-pytest~=8.3.4
-ruff~=0.9.5
-types-psycopg2~=2.9.21.20250121
-types-requests~=2.32.0.20241016
+pytest~=8.3.5
+ruff~=0.11.2
+types-psycopg2~=2.9.21.20250318
+types-requests~=2.32.0.20250328
