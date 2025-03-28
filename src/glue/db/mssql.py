@@ -2,17 +2,47 @@
 """microsoft sql server related functions"""
 
 import logging
-from typing import Any
 
-import ctds
+import pyodbc
+from ..config import GlueConfig
+
+from typing import TypeAlias
 
 logger = logging.getLogger(__name__)
 
 
-def connect(*args, **kwargs) -> Any:
+Connection: TypeAlias = pyodbc.Connection
+
+
+def connect(
+    server: str,
+    user: str,
+    password: str,
+    database: str,
+    config: GlueConfig,
+) -> Connection:
     """
-    wrapper around ctds.connect that ensures paramstyle="named"
+    wrapper around pyodbc.connect that ensures paramstyle="named"
     """
-    kwargs["paramstyle"] = "named"
-    # https://zillow.github.io/ctds/ctds.html#ctds.connect
-    return ctds.connect(*args, **kwargs)
+
+    # fixme: implement and expose the following options:
+    #
+    # Encrypt
+
+    connstring = (
+        "Driver={ODBC Driver 18 for SQL Server};"
+        f"Server={server};"
+        f"Database={database};"
+        f"UID={user};"
+        f"PWD={password};"
+        f"TrustServerCertificate={config.trust_server_certificate};"
+    )
+
+    # https://github.com/mkleehammer/pyodbc/wiki/The-pyodbc-Module#connect
+    cnxn = pyodbc.connect(
+        connstring,
+        timeout=config.db_timeout,
+        autocommit=config.mssql_autocommit,
+    )
+
+    return cnxn

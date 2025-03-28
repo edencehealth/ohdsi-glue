@@ -8,10 +8,24 @@ import logging
 import re
 import string
 from importlib import resources
-from typing import Any, Dict, Final, List, NamedTuple, Tuple
+from typing import (
+    Any,
+    Dict,
+    Final,
+    List,
+    NamedTuple,
+    Tuple,
+    Callable,
+    TypeAlias,
+    Union,
+    Optional,
+)
 
-from .mssql import connect as mssql_connect
-from .postgres import connect as pg_connect
+import sqlparams
+
+from . import mssql
+from . import postgres
+from ..config import GlueConfig
 
 sql_dir = resources.files("glue.sql")
 logger = logging.getLogger(__name__)
@@ -19,6 +33,19 @@ logger = logging.getLogger(__name__)
 # note: if you change these you have to update table_info and list_tables
 identifier_prefix: Final = "ID_"
 literal_prefix: Final = "LIT_"
+
+DBConnection = Union[mssql.Connection, postgres.Connection]
+
+ConnectFunc: TypeAlias = Callable[
+    [
+        str,  # server
+        str,  # user
+        str,  # password
+        str,  # database
+        GlueConfig,
+    ],
+    DBConnection,
+]
 
 
 @functools.cache
@@ -85,29 +112,33 @@ class MultiDB(contextlib.AbstractContextManager):
         user: str,
         password: str,
         database: str,
-        mssql_timeout: int = 5,
+        config: GlueConfig,
     ):
         self.dialect = dialect
         self.server = server
         self.database = database
-        if dialect == "sql server":
-            self.cnxn = mssql_connect(
-                server=server,
-                user=user,
-                password=password,
-                database=database,
-                timeout=mssql_timeout,
-            )
-            # attempt to change the default database on the connection, this
-            # should already be handled by mssql_connect but it may not be
-            # working
-            self.execute("use {ID_database}", ID_database=database)
-        elif dialect == "postgresql":
-            self.cnxn = pg_connect(
-                server=server, user=user, password=password, database=database
-            )
-        else:
+
+        # fixme: consider passing-in a config instance or otherwise getting the
+        # settings directly to the connect helper functions
+        # things like extra settings, encryption, tls trust settings, and more
+        #
+        # we don't want want to have to pass a zillion args to MultiDB's constructor
+        # everytime we use it
+        connect_func: Optional[ConnectFunc] = None
+        match dialect:
+            case "sql server":
+                connect_func = mssql.connect
+            case "postgresql":
+                connect_func = postgres.connect
+        if not connect_func:
             raise RuntimeError("Unrecognized database dialect: " + dialect)
+        self.cnxn = connect_func(
+            server,
+            user,
+            password,
+            database,
+            config,
+        )
 
     def __exit__(self, *args, **kwargs):
         """close the database connection"""
@@ -154,7 +185,11 @@ class MultiDB(contextlib.AbstractContextManager):
         else:
             raise RuntimeError("Unrecognized database dialect: " + self.dialect)
 
-        return string.Formatter().vformat(query, [], formatter), params
+        formatted_query = string.Formatter().vformat(query, [], formatter)
+        if self.dialect == "sql server":
+            p_query = sqlparams.SQLParams("named", "qmark")
+            formatted_query, params = p_query.format(formatted_query, params)
+        return formatted_query, params
 
     def get_column(self, sql: str, **params) -> List[Any]:
         """
@@ -171,8 +206,10 @@ class MultiDB(contextlib.AbstractContextManager):
                 final_query,
             )
             cursor.execute(final_query, filtered_params)
-            self.cnxn.commit()
-            columns = len(cursor.description)
+            # self.cnxn.commit()
+            columns = 0
+            if cursor.description and isinstance(cursor.description, tuple):
+                columns = len(cursor.description)
             rows = cursor.fetchall()
 
         if columns != 1:
