@@ -226,6 +226,15 @@ class GlueConfig(BaseCfg):
         ),
     )
 
+    enable_flush_webapi_caches: bool = opt(
+        default=True,
+        doc=(
+            "enables flushing the WebAPI DB's achilles_cache and cdm_cache tables; "
+            "this can work around problems of missing domain tables or problems "
+            "seeing updated data in Atlas"
+        ),
+    )
+
     enable_result_init: bool = opt(
         default=True,
         doc=(
